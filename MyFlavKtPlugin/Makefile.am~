@@ -1,0 +1,16 @@
+
+# hepmc has a version of fastjet that is not new enough
+AM_LDFLAGS =  $(FASTJET_LDFLAGS) $(ROOT_LDFLAGS)
+# hepmc has a version of fastjet that is not new enough
+AM_CXXFLAGS =  $(NTUPLEREADER_CXXFLAGS) $(FASTJET_CXXFLAGS)
+
+
+lib_LTLIBRARIES = libMyFlavKtPlugin.la
+
+
+libMyFlavKtPlugin_la_SOURCES = \
+		MyFlavKtPlugin.cc
+
+
+
+libMyFlavKtPlugin_la_LIBS = fastjettool

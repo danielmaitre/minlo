@@ -1,0 +1,25 @@
+#!/bin/sh
+
+case $1 in
+  --version)
+    echo @PACKAGE_VERSION@;;
+  --prefix)
+    echo @prefix@;;
+  --ldflags)
+    echo -L@prefix@/lib/  ;;
+  --libs)
+    echo -lMINLOlib @FASTJET_LDFLAGS@ @LHAPDF_LDFLAGS@ @NTUPLEREADER_LDFLAGS@ ;;
+  --rpath)
+    echo -Wl,-rpath,@prefix@/lib/  ;;
+  --include)
+    echo -I@prefix@/include/MINLOlib   ;;
+  *)
+    echo "MINLOlib-config : configuration script";
+    echo "Options:";
+    echo "   --version : returns the version";
+    echo "   --prefix  : returns the installation path";
+    echo "   --include  : returns the compiler flags to include the header";
+    echo "   --libs    : returns the linker arguments to link the library";
+    echo "   --rpath    : returns the linker arguments to include the library in the rpath of the library or executable to be linked";;
+esac
+

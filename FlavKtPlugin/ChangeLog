@@ -1,0 +1,12 @@
+2012-08-24  Gavin Salam  <salam@lpthe.jussieu.fr>
+
+	* FlavKtPlugin.hh|cc:
+	FlavKtPlugin::Extras now has an extra member function,
+	beam_it_clusters_with(jet), which returns +1, -1 or 0 according to
+	whether this jet will immediately go on to cluster with the
+	forward beam, backward beam, or with something other than the beam
+	(or even nothing at all). Suggested by Daniel Maitre.
+
+	
+
+

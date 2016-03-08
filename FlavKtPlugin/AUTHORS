@@ -1,0 +1,6 @@
+The f90 code underlying FlavKtPlugin was written by Andrea Banfi,
+Gavin P. Salam and Giulia Zanderighi. The plugin itself was written by
+GP Salam.
+
+It implements the flavour-kt algorithms described in Eur.Phys.J. C47
+(2006) 113 [hep-ph/0601139]

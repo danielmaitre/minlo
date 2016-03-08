@@ -1,0 +1,16 @@
+This directory contains a fortran 90 implementation of the flavour-kt jet algorithms,
+
+  Eur.Phys.J. C47 (2006) 113 [hep-ph/0601139]
+
+together with a C++ FastJet interface to them, through a plugin. 
+
+To build the plugin, just type make (for it to work you will need to
+have fastjet-config in your path, and coinciding versions of g++ and
+gfortran).
+
+An example of usage is to be found in examples/fastjet-example.cc (see
+the README file in that directory and the top of the program file).
+
+
+
+
