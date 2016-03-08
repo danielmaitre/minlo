@@ -23,7 +23,7 @@ int main(){
   currentPDF::init("CT10nlo",0);
   
 	std::vector<std::string> fs;
-	fs.push_back("/home/daniel/Minlo/Wm2j_born_small.root");
+	fs.push_back("data/Wm2j_born_small.root");
 
 	MINLOreader r;
 
