@@ -115,6 +115,35 @@ AC_CHECK_HEADERS([LHAPDF/LHAPDF.h],
 	])
 CPPFLAGS=$oldCPPFLAGS
 
+
+
+AC_ARG_WITH([root-path], [AS_HELP_STRING([--with-root-path],
+          [location of the root installation])],
+          [],
+          [with_root_path=yes])
+
+AS_IF([test "x$with_root_path" != xyes],
+          [AC_SUBST([ROOT_CXXFLAGS], ["`$with_root_path/bin/root-config --cflags`"])
+	   AC_SUBST([ROOT_LDFLAGS], ["`$with_root_path/bin/root-config --libs`"])
+	   AC_SUBST([ROOTCINT], ["`$with_root_path/bin/root-config --prefix`/bin/rootcint"])
+	   ROOTINCDIR=`$with_root_path/bin/root-config --incdir`
+	  ],
+          [AC_SUBST([ROOT_CXXFLAGS], [`root-config --cflags`])
+	   AC_SUBST([ROOT_LDFLAGS], ["`root-config --ldflags`"])
+	   AC_SUBST([ROOT_LIBS], ["`root-config --libs`"])
+	   AC_SUBST([ROOTCINT], ["`root-config --prefix`/bin/rootcint"])
+	   ROOTINCDIR=`root-config --incdir`
+])
+
+
+oldCPPFLAGS=$CPPFLAGS
+CPPFLAGS="$CPPFLAGS -I$ROOTINCDIR"
+AC_LANG([C++])
+AC_CHECK_HEADERS([TBuffer.h TChain.h TFile.h TH1F.h TKey.h TList.h TObject.h TString.h TSystem.h TTree.h
+],[],[AC_ERROR([Need ROOT headers, please specifiy the path to the ROOT installation with the --with-root-path option. This can also fail if you are using ROOT >= 6.0 and do not the c++11 standards are not supported by default, consider using CXXFLAGS=-std=c++11])])
+CPPFLAGS=$oldCPPFLAGS
+AC_CONFIG_MACRO_DIRS([m4])
+
 AC_ARG_ENABLE([debug],
      [  --enable-debug    Turn on debugging],
      [case "${enableval}" in
