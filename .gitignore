@@ -20,3 +20,5 @@ ltmain.sh
 ar-lib
 FlavKtPlugin/#dpktclus_gen.f90#
 Sudakov.top
+*/Makefile.in
+m4/*

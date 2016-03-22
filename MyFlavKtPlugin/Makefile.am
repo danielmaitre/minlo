@@ -14,4 +14,4 @@ libMyFlavKtPlugin_la_SOURCES = \
 
 
 libMyFlavKtPlugin_la_LIBS = fastjettool
-#libMyFlavKtPlugin_la_LIBADD = -lgfortran 
+libMyFlavKtPlugin_la_LIBADD = -lgfortran 
