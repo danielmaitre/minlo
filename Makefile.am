@@ -1,6 +1,8 @@
 SUBDIRS = MyFlavKtPlugin FlavKtPlugin
 
+F77=gfortran
 
+ACLOCAL_AMFLAGS = -I m4
 
 bin_PROGRAMS= test
 test_SOURCES = test.cpp
@@ -16,14 +18,18 @@ libMINLOlib_la_SOURCES = \
 	pdf.h pdf.cpp
 
 AM_LDFLAGS =  $(FASTJET_LDFLAGS) $(LHAPDF_LDFLAGS) 
+AM_LDFLAGS += $(ROOT_LIBS)
 
 libMINLOlib_la_LDFLAGS = $(NTUPLEREADER_LDFLAGS)
-libMINLOlib_la_LIBADD = MyFlavKtPlugin/libMyFlavKtPlugin.la FlavKtPlugin/libFlavKtPlugin.la -lgfortran $(GSL_LDFLAGS)
+#libMINLOlib_la_LIBADD = MyFlavKtPlugin/libMyFlavKtPlugin.la FlavKtPlugin/libFlavKtPlugin.la -lgfortran $(GSL_LDFLAGS)
+libMINLOlib_la_LIBADD = MyFlavKtPlugin/libMyFlavKtPlugin.la FlavKtPlugin/libFlavKtPlugin.la $(GSL_LDFLAGS)
 
 
 AM_CXXFLAGS =  $(NTUPLEREADER_CXXFLAGS) $(FASTJET_CXXFLAGS) $(LHAPDF_CXXFLAGS)
+AM_CXXFLAGS += $(ROOT_CXXFLAGS)
 
 test_LDFLAGS = $(NTUPLEREADER_LDFLAGS) $(FASTJET_CXXFLAGS) $(LHAPDF_CXXFLAGS)
+test_LDFLAGS += $(ROOT_LIBS)
 test_LDADD = libMINLOlib.la MyFlavKtPlugin/libMyFlavKtPlugin.la  $(FASTJET_LDFLAGS)
 
 
