@@ -22,3 +22,4 @@ FlavKtPlugin/#dpktclus_gen.f90#
 Sudakov.top
 */Makefile.in
 m4/*
+FlavKtPlugin/Makefile.in
