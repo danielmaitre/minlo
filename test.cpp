@@ -1,6 +1,6 @@
-#include "nTupleReader.h"
-#include "NtupleInfo.h"
-#include "EventReaderBase.h"
+#include "ntuplereader/nTupleReader.h"
+#include "ntuplereader/NtupleInfo.h"
+#include "ntuplereader/EventReaderBase.h"
 #include "MINLOfunctions.h"
 #include "pdf.h"
 using namespace std;

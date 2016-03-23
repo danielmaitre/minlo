@@ -5,7 +5,7 @@
  *      Author: daniel
  */
 
-#include "NtupleInfo.h"
+#include "ntuplereader/NtupleInfo.h"
 #include "MINLOfunctions.h"
 #include "debug.h"
 #include <vector>

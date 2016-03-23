@@ -59,15 +59,14 @@ AS_IF([test "x$with_gsl_path" != xyes],
 
 AC_ARG_WITH([nTupleReader-path], [AS_HELP_STRING([--with-nTupleReader-path],
           [location of the nTupleReader installation])],
-          [],
-          [with_nTupleReader_path=yes])
+          [use_ntuplereader_path=yes])
 
-AS_IF([test "x$with_nTupleReader_path" != xyes],
-          [AC_SUBST([NTUPLEREADER_CXXFLAGS], ["`$with_nTupleReader_path/bin/nTupleReader-config --include`"])
+AS_IF([test "x$use_ntuplereader_path" == xyes],
+          [AC_SUBST([NTUPLEREADER_CXXFLAGS], ["`$with_nTupleReader_path/bin/nTupleReader-config --cxxflags`"])
 	   AC_SUBST([NTUPLEREADER_LDFLAGS], ["`$with_nTupleReader_path/bin/nTupleReader-config --libs`"])
 	   AC_SUBST([NTUPLEREADER_LIBS], ["`$with_nTupleReader_path/bin/nTupleReader-config --libs`"])
 	  ],
-          [AC_SUBST([NTUPLEREADER_CXXFLAGS], [`nTupleReader-config --include`])
+          [AC_SUBST([NTUPLEREADER_CXXFLAGS], [`nTupleReader-config --cxxflags`])
 	   AC_SUBST([NTUPLEREADER_LDFLAGS], ["`nTupleReader-config --libs`"])
 	   AC_SUBST([NTUPLEREADER_LIBS], ["`nTupleReader-config --libs`"])
 ])
@@ -79,7 +78,7 @@ oldCPPFLAGS=$CPPFLAGS
 CPPFLAGS="$CPPFLAGS $NTUPLEREADER_CXXFLAGS"
 echo $CPPFLAGS
 AC_LANG([C++])
-AC_CHECK_HEADERS([nTupleReader.h],
+AC_CHECK_HEADERS([ntuplereader/nTupleReader.h],
      [],
      [AC_ERROR(
 	[Need nTupleReader headers, please specifiy the path to the nTupleReader installation with the --with-nTupleReader-path option.]
