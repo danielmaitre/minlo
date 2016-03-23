@@ -17,5 +17,6 @@ libFlavKtPlugin_la_SOURCES = \
 	NameSelect.f90  \
 	FlavKtPlugin.cc
 
+libFlavKtPlugin_la_LIBADD = $(FCLIBS)
 
 
