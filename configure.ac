@@ -70,7 +70,6 @@ AS_IF([test "x$with_nTupleReader_path" != xyes],
           [AC_SUBST([NTUPLEREADER_CXXFLAGS], [`nTupleReader-config --include`])
 	   AC_SUBST([NTUPLEREADER_LDFLAGS], ["`nTupleReader-config --libs`"])
 	   AC_SUBST([NTUPLEREADER_LIBS], ["`nTupleReader-config --libs`"])
-	   NTUPLEREADERINCDIR=`nTupleReader-config --incdir`
 ])
 
 
