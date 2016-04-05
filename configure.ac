@@ -1,6 +1,7 @@
 AC_INIT([MINLOlib], [0.0], [daniel.maitre@durham.ac.uk])
 AC_CONFIG_AUX_DIR([.])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
+AC_CONFIG_MACRO_DIR([m4])
 AM_DISABLE_STATIC
 AC_PROG_CXX
 AC_PROG_F77
@@ -141,7 +142,7 @@ AC_LANG([C++])
 AC_CHECK_HEADERS([TBuffer.h TChain.h TFile.h TH1F.h TKey.h TList.h TObject.h TString.h TSystem.h TTree.h
 ],[],[AC_ERROR([Need ROOT headers, please specifiy the path to the ROOT installation with the --with-root-path option. This can also fail if you are using ROOT >= 6.0 and do not the c++11 standards are not supported by default, consider using CXXFLAGS=-std=c++11])])
 CPPFLAGS=$oldCPPFLAGS
-AC_CONFIG_MACRO_DIRS([m4])
+
 
 AC_ARG_ENABLE([debug],
      [  --enable-debug    Turn on debugging],
