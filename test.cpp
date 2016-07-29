@@ -13,6 +13,9 @@ public:
     RootFileReaderBase::init(d_NI,"t3");  
   }
   bool nextEntry(){return readNextEntry(d_NI);}
+  void addFiles(const std::vector<std::string>& fs){
+  		RootFileReaderBase::addFiles(d_NI,fs);
+  };
   virtual ~MINLOreader(){};
 };
 
