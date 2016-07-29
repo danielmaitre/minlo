@@ -19,4 +19,5 @@ libFlavKtPlugin_la_SOURCES = \
 
 libFlavKtPlugin_la_LIBADD = $(FCLIBS)
 
+.NOTPARALLEL:
 
