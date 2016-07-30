@@ -144,6 +144,17 @@ AC_CHECK_HEADERS([TBuffer.h TChain.h TFile.h TH1F.h TKey.h TList.h TObject.h TSt
 CPPFLAGS=$oldCPPFLAGS
 
 
+
+
+m4_include([m4Macros/m4_ax_boost_base.m4])
+m4_include([m4Macros/ax_boost_program_options.m4])
+
+AX_BOOST_BASE([1.33.0])
+AX_BOOST_PROGRAM_OPTIONS
+
+
+
+
 AC_ARG_ENABLE([debug],
      [  --enable-debug    Turn on debugging],
      [case "${enableval}" in

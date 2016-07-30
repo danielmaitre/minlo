@@ -1,30 +1,15 @@
-#include "ntuplereader/nTupleReader.h"
-#include "ntuplereader/NtupleInfo.h"
-#include "ntuplereader/EventReaderBase.h"
+#include "MinloReader.h"
 #include "MINLOfunctions.h"
 #include "pdf.h"
 using namespace std;
 
-
-class MINLOreader : public RootFileReaderBase {
-public:
-  NtupleInfo<MAX_NBR_PARTICLES> d_NI;
-  MINLOreader() {
-    RootFileReaderBase::init(d_NI,"t3");  
-  }
-  bool nextEntry(){return readNextEntry(d_NI);}
-  void addFiles(const std::vector<std::string>& fs){
-  		RootFileReaderBase::addFiles(d_NI,fs);
-  };
-  virtual ~MINLOreader(){};
-};
 
 
 
 int main(){
 
   currentPDF::init("CT10nlo",0);
-  
+
 	std::vector<std::string> fs;
 	fs.push_back("data/Wm2j_born_small.root");
 
