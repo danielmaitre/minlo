@@ -24,7 +24,7 @@ AM_LDFLAGS += $(ROOT_LIBS)
 
 libMINLOlib_la_LDFLAGS = $(NTUPLEREADER_LDFLAGS)
 #libMINLOlib_la_LIBADD = MyFlavKtPlugin/libMyFlavKtPlugin.la FlavKtPlugin/libFlavKtPlugin.la -lgfortran $(GSL_LDFLAGS)
-libMINLOlib_la_LIBADD = MyFlavKtPlugin/libMyFlavKtPlugin.la FlavKtPlugin/libFlavKtPlugin.la $(GSL_LDFLAGS)
+libMINLOlib_la_LIBADD = MyFlavKtPlugin/libMyCluster.la FlavKtPlugin/libFlavKtPlugin.la $(GSL_LDFLAGS)
 
 
 AM_CXXFLAGS =  $(NTUPLEREADER_CXXFLAGS) $(FASTJET_CXXFLAGS) $(LHAPDF_CXXFLAGS)
@@ -33,11 +33,11 @@ AM_CXXFLAGS += $(BOOST_CXXFLAGS)
 
 test_LDFLAGS = $(NTUPLEREADER_LDFLAGS) $(FASTJET_CXXFLAGS) $(LHAPDF_CXXFLAGS)
 test_LDFLAGS += $(ROOT_LIBS)
-test_LDADD = libMINLOlib.la MyFlavKtPlugin/libMyFlavKtPlugin.la  $(FASTJET_LDFLAGS)
+test_LDADD = libMINLOlib.la MyFlavKtPlugin/libMyCluster.la  $(FASTJET_LDFLAGS)
 
 run_LDFLAGS = $(NTUPLEREADER_LDFLAGS) $(FASTJET_CXXFLAGS) $(LHAPDF_CXXFLAGS) $(BOOST_LDFLAGS)
 run_LDFLAGS += $(ROOT_LIBS)
-run_LDADD = libMINLOlib.la MyFlavKtPlugin/libMyFlavKtPlugin.la  $(FASTJET_LDFLAGS)
+run_LDADD = libMINLOlib.la MyFlavKtPlugin/libMyCluster.la  $(FASTJET_LDFLAGS)
 
 LIBS += $(BOOST_PROGRAM_OPTIONS_LIB)
 

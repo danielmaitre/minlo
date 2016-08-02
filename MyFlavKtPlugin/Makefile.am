@@ -5,13 +5,13 @@ AM_LDFLAGS =  $(FASTJET_LDFLAGS) $(ROOT_LDFLAGS)
 AM_CXXFLAGS =  $(NTUPLEREADER_CXXFLAGS) $(FASTJET_CXXFLAGS)
 
 
-lib_LTLIBRARIES = libMyFlavKtPlugin.la
+lib_LTLIBRARIES = libMyCluster.la
 
 
-libMyFlavKtPlugin_la_SOURCES = \
-		MyFlavKtPlugin.cc
+libMyCluster_la_SOURCES = \
+		MyFlavKtPlugin.cc boosts.h boosts.cpp
 
 
 
-libMyFlavKtPlugin_la_LIBS = fastjettool
-libMyFlavKtPlugin_la_LIBADD = $(FCLIBS) 
+libMyCluster_la_LIBS = fastjettool
+libMyCluster_la_LIBADD = $(FCLIBS) 

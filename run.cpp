@@ -17,8 +17,12 @@ int main(int ac,char** av){
 
 	desc.add_options()
     	("help", "produce help")
+    	("verbose,v", "verbose output")
+    	("run.max",po::value<long>()->default_value(0),"max number of points")
     	("run.pdf", po::value<std::string>()->default_value(""), "pdf")
     	("run.ntupleFile", po::value<std::string>()->default_value(""), "nTuple file to be read")
+    	("run.startEntry", po::value<long>()->default_value(1), "1-based entry to start at")
+    	("run.endEntry", po::value<long>()->default_value(0), "1-based entry to end at")
     	("config-file", po::value<std::string>()->default_value("run.cfg"), "config file to be read")
     	("minlo.njetsOrig", po::value<int>(), "number of jets to start with")
     	("minlo.njetsClus", po::value<int>(), "number of jets to cluster to")
@@ -52,6 +56,11 @@ int main(int ac,char** av){
 	    return 1;
 	}
 
+	bool verbose=false;
+	if (vm.count("verbose")) {
+	    verbose=true;
+	}
+
 	if (vm.count("run.pdf")) {
 	    cout << "pdf set to " << vm["run.pdf"].as<std::string>() << ".\n";
 	} else {
@@ -63,7 +72,7 @@ int main(int ac,char** av){
 	    cout << "No nTuple file  set.\n";
 	}
 
-
+	long maxEntry=vm["run.max"].as<long>();
 
 	currentPDF::init(vm["run.pdf"].as<std::string>(),0);
 
@@ -97,24 +106,49 @@ int main(int ac,char** av){
 
 	MI.print(std::cout);
 
+	double worst=0.0;
+	long worstIndex=0;
+	r.setStartEntryIndex(vm["run.startEntry"].as<long>());
+	long end=vm["run.endEntry"].as<long>();
+	if (end!=0){
+		r.setEndEntryIndex(end);
+	}
 	while(r.nextEntry()){
 		int id=r.d_NI.id;
+		int current=r.getIndexOfNextEntry()-1;
+
+
+		int flg_bornonly=vm["keith.flg_bornonly"].as<int>();    //! Are we feeding through only Born stuff (1), or NLO (0)?
+		int imode=vm["keith.imode"].as<int>();           //! imode=1 for Born, imode=2 for all NLO contribs
+		// ignore vm["keith.isReal"].as<int>() as it doesn't know the difference
+		// between real and subtraction
+		int isReal;
+		if (r.d_NI.nparticle==4){
+			isReal=0;          //! Set isReal=1 for real kinematics, 0 otherwise.
+		} else {
+			isReal=1;          //! Set isReal=1 for real kinematics, 0 otherwise.
+		}
+		double keith = MINLO_computeSudakovKeith(r.d_NI,flg_bornonly,imode,isReal,MI.d_energy);
+		if (verbose){
+			cout << "Keith weight: " << keith << endl;
+		}
 
 		double q0,scaleForNLO;
 		double alphaFactor=MINLOcomputeSudakov(MI,r.d_NI,weightType,q0,scaleForNLO);
 
 
 
-		int flg_bornonly=vm["keith.flg_bornonly"].as<int>();    //! Are we feeding through only Born stuff (1), or NLO (0)?
-		int imode=vm["keith.imode"].as<int>();           //! imode=1 for Born, imode=2 for all NLO contribs
-		int isReal=vm["keith.isReal"].as<int>();          //! Set isReal=1 for real kinematics, 0 otherwise.
-		double keith = MINLO_computeSudakovKeith(r.d_NI,flg_bornonly,imode,isReal);
-		cout << "Keith weight: " << keith << endl;
-		cout << "(" << r.d_NI.id<<") Keith weight/my weight: " << keith/alphaFactor << endl;
-
-
+		double ratio=keith/alphaFactor;
+		double distance=abs(1-ratio);
+		if (distance>worst){
+			worst=distance;
+			worstIndex=current;
+		}
+		if (verbose){
+			cout << "(Ev:" << r.d_NI.id<<" ent:"<< current<<") Keith weight/my weight: " << keith/alphaFactor << endl;
+		}
 	}
-
+	cout << "worst difference: " << worst << " at entry " << worstIndex << endl;
 	return 0;
 
 }

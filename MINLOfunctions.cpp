@@ -595,7 +595,7 @@ double MINLOcomputeSudakov(MinloInfo& MI,NtupleInfo<MAX_NBR_PARTICLES>& Ev, int 
 	}
 	fastjet::JetDefinition jet_def = new fastjet::MyFlavKtPlugin(imode, R,nb);
 	fastjet::ClusterSequence cs(input_particles, jet_def);
-	NAMED_DEBUG("EVENT_INCL_VIEW", printEventInclView(cs,5.0);)
+	NAMED_DEBUG("EVENT_INCL_VIEW", printEventInclView(cs,0.0);)
 	// next look at the exclusive clustering, viewing this as a 2-jet event
 	// (beware when doing this with "ktfs" type algorithms, which leave
 	// clusterings that lead to non-partonic flavours, e.g. ud, until the very end)
@@ -787,7 +787,7 @@ double getBeamEnergy(NtupleInfo<MAX_NBR_PARTICLES>& Ev){
 void printEventInclView(fastjet::ClusterSequence& cs,double ptCut){
 	vector<fastjet::PseudoJet> jets = sorted_by_pt(cs.inclusive_jets(ptCut));
 	cout << endl;
-	cout << "Inclusive jets about 5 GeV " << endl;
+	cout << "Inclusive jets  " << endl;
 	cout << "------------------------------" << endl;
 	print_header(cout) << endl;
 	for (unsigned i = 0; i < jets.size(); i++) cout << jets[i] << endl;
@@ -834,14 +834,14 @@ void printFlavourPart(const std::vector<fastjet::PseudoJet>& input_particles){
 const int nMomenta=20;
 
 
-double MINLO_computeSudakovKeith(NtupleInfo<MAX_NBR_PARTICLES>& Ev,int flg_bornonly,int imode,int isReal){
+double MINLO_computeSudakovKeith(NtupleInfo<MAX_NBR_PARTICLES>& Ev,int flg_bornonly,int imode,int isReal,double BeamEnergy){
 
 	double kn_pborn[4*nMomenta];
 	double kn_cmpborn[4*nMomenta];
 	int flav[nMomenta];
 	int index;
 
-	double E=3500;
+	double E=BeamEnergy;
 
 
 	kn_pborn[0]=E*Ev.x1;

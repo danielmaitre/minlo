@@ -74,7 +74,7 @@ double getBeamEnergy(NtupleInfo<MAX_NBR_PARTICLES>& Ev);
 void printEventInclView(fastjet::ClusterSequence& cs,double ptCut);
 void printEventExclView(int n_excl,fastjet::ClusterSequence& cs);
 void printFlavourPart(const std::vector<fastjet::PseudoJet>& input_particles);
-double MINLO_computeSudakovKeith(NtupleInfo<MAX_NBR_PARTICLES>& Ev,int flg_bornonly,int imode,int isReal);
+double MINLO_computeSudakovKeith(NtupleInfo<MAX_NBR_PARTICLES>& Ev,int flg_bornonly,int imode,int isReal,double beamEnergy);
 double getMINLOweight(MinloInfo& MI,NtupleInfo<MAX_NBR_PARTICLES>& Ev,int weightType);
 
 #endif /* MINLOFUNCTIONS_H_ */

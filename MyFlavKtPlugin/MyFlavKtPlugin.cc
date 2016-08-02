@@ -8,7 +8,7 @@
 #include <cmath> //for log
 #include "TLorentzVector.h"
 #include <iomanip>
-
+#include "boosts.h"
 
 using namespace std;
 
@@ -18,12 +18,22 @@ inline std::ostream & operator<<(std::ostream& ostr, const PseudoJet & j) {
   ostr << std::setw(12) << j.perp()
        << std::setw(12) << j.rap()
 	   << std::setw(12) << j.phi()
-	   << std::setw(12) << j.px()
 	   << " E: " << std::setw(12) << j.E()
 	   << " x,y,z: " <<  std::setw(12) << j.px()
 	   << std::setw(12) << j.py()
 	   << std::setw(12) << j.pz() ;
   if (j.has_user_info<FlavInfo>()) ostr << "  " << j.user_info<FlavInfo>().description();
+  return ostr;
+}
+
+inline std::ostream & operator<<(std::ostream& ostr, const TLorentzVector & m) {
+  ostr << std::setw(12) << m.Perp()
+       << std::setw(12) << m.Rapidity()
+	   << std::setw(12) << m.Phi()
+	   << " E: " << std::setw(12) << m.E()
+	   << " x,y,z: " <<  std::setw(12) << m.X()
+	   << std::setw(12) << m.Y()
+	   << std::setw(12) << m.Z() ;
   return ostr;
 }
 
@@ -48,6 +58,12 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
   int    nflav = 6;
   int    flav[nflav*np], beamflav[nflav*2];
   
+  NAMED_DEBUG("PRE_CLUSTERING",
+	for (int ip=0;ip<np;ip++){
+		std::cout << "particle " << ip << " " << cs.jets()[ip] << std::endl;
+	}
+	)
+
   // lookup table: lookup[i] tells you what position i in the
   // nodelist corresponds to in our list of jets
   vector<int> lookup(2*np+1);
@@ -56,7 +72,7 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
   vector<int> spectators;
   bool found_flavour = false;
   
-  vector<double> pt(np);
+  vector<double> pt(2*np);   // if all particles are merged into pseudojets the size of the cs.jets vector can grow above np, 2*np is conservative
   
 
   int j = 0; // index in fortran array
@@ -78,6 +94,8 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
     lookup[np+1+j] = i;
     j++;
   }
+
+
   // the lookup table started from np; but actually needs to start
   // from the "fortran" np, i.e. the number of particles passed to the
   // fortran code; so now shift things appropriately
@@ -100,6 +118,8 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
   double yCMF;
   double z1;
   double z2;
+
+
   if (beam_particles.size() == 0) {
     //-----------------------------------
     // no beams: invent flavourless beams
@@ -114,6 +134,7 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
     int b2 = beam_particles[1];
     z1=cs.jets()[b1].pz();
     z2=cs.jets()[b2].pz();
+    NAMED_DEBUG("CMS_RAPIDITY",cout << " CMS rapidity: z1: " << z1 << " z2: " <<z2 << endl;)
     yCMF=(cs.jets()[b1]+cs.jets()[b2]).rap();
     NAMED_DEBUG("CMS_RAPIDITY",cout << " CMS rapidity: " << yCMF  << endl;)
     yCMF=0.5*log(z1/(-z2));
@@ -164,7 +185,7 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
   }
 
   for (int nclus=0;nclus<np;nclus++){
-	  NAMED_DEBUG("BEAM_CLUSTERING",cout << "clustering round: " << nclus << endl;)
+	  NAMED_DEBUG("BEAM_CLUSTERING",cout << "=== clustering round: ===" << nclus << endl;)
 	  NAMED_DEBUG("BEAM_CLUSTERING", cout << "candidates at this point: " ;copy(candidates.begin(),candidates.end(),ostream_iterator<int>(cout," ")); cout << endl)
 	  friendly = true;
 	  double minDistance=1e32;
@@ -235,9 +256,22 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 				  parent2=candidateIndex2;
 			  }
 		  }
+
 	  }
 
-
+		if (parent1==-3 && parent2==-3){
+		  	throw Error("no clustering found!");
+		  } else {
+		  	if (parent2==-1){
+		  		if (beam_index==1){
+		  			NAMED_DEBUG("CLUSTERING_DECISION",cout << "==> decided to merge jet "<< candidates[parent1] << " and forward beam" << endl;)
+		  		} else {
+			  		NAMED_DEBUG("CLUSTERING_DECISION",cout << "==> decided to merge jet "<< candidates[parent1] << " and " << "backward beam"<< endl;)
+		  		}
+		  	} else {
+		  		NAMED_DEBUG("CLUSTERING_DECISION",cout << "==> decided to merge jet "<< candidates[parent1] << " and jet " << candidates[parent2] << endl;)
+		  	}
+		  }
 
 	  for (int ii=2;ii<cs.jets().size();ii++){
 		pt[ii]=cs.jets()[ii].pt();
@@ -291,36 +325,42 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 
 		  if (beam_index==1){
 			  z1=z1-j1.pz();
-			  //E1=z1; only need z1
-			  if (z1<0){ throw; } // this should not happen!
+			  //if (z1<0){
+			  	//std:: cerr<< "Problem with the momentum fractions: perhaps the wrong beam energy is used?" <<  std::endl;
+			  	//throw;
+			  	//} // this should not happen!
 		  } else {
 			  z2=z2-j1.pz();
-			  //E2=-z2; only need z2
-			  if (z2>0){ throw; } // this should not happen!
+			  //if (z2>0){
+  			  	//std:: cerr<< "Problem with the momentum fractions: perhaps the wrong beam energy is used?" <<  std::endl;
+				//throw;
+			  //} // this should not happen!
 		  }
 
 		yCMF=0.5*log(z1/(-z2));
 		NAMED_DEBUG("CMS_RAPIDITY",cout << " CMS rapidity: " << yCMF  << " (before boost)" << endl;)
 
-		  if (doBoost){
+		  if (doBoost && nclus==0){ // only boost the first time!
+			int jetIndex=beam_particles[0];
+			PseudoJet& bj1=const_cast<PseudoJet&>(cs.jets()[jetIndex]);
+			int jetIndex2=beam_particles[1];
+			PseudoJet& bj2=const_cast<PseudoJet&>(cs.jets()[jetIndex2]);
 
-			  double betaz;
-			  double keith_k0;
-			  if (beam_index==1){
-				  betaz=-j1.pz()/z1;
-				  //E1=z1; only need z1
-				  if (z1<0){ throw; } // this should not happen!
-			  } else {
-				  betaz=-j1.pz()/z2;
-				  //E2=-z2; only need z2
-				  if (z2>0){ throw; } // this should not happen!
-			  }
+			ISRboost(
+				bj1,bj2,
+				j1,
+				candidates,
+				cs,
+				beam_particles
+			);
+/*
+			double keith_k0;
 
 	//	      k0rec=q0-cmpin(0,j)
 	//	      krecv=-cmpin(1:3,j)
 	//	      beta=-krecv(3)/k0rec
-			  keith_k0=2*z1-j1.E(); //if we are in CMF z1=-z2
-			  double keith_beta=j1.pz()/keith_k0;
+			  keith_k0=bj1.E()+bj2.E()-j1.E();
+			  double keith_beta=-j1.pz()/keith_k0;
 			  double krec2=j1.px()*j1.px()+j1.py()*j1.py()+j1.pz()*j1.pz();
 			  double krec=sqrt(krec2);
 			  double recMass2=keith_k0*keith_k0-krec2;
@@ -334,10 +374,12 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 			double boosty=-j1.py()/Keith_norm;
 
 
-
+			TLorentzVector q(-j1.px(),-j1.py(),-j1.pz(),-j1.E());
+			TLorentzVector m1(bj1.px(),bj1.py(),bj1.pz(),bj1.E());
+			TLorentzVector m2(bj2.px(),bj2.py(),bj2.pz(),bj2.E());
+			q=q+m1+m2;
 			NAMED_DEBUG("BOOST",
 				std::cout << "keith_k0: " << keith_k0 << " keith_beta: " << keith_beta <<  std::endl ;
-				std::cout << "betaz: " << betaz << " boostx: " << boostx <<" boosty: " << boosty << std::endl ;
 				std::cout << "rebM2: " << recMass2 << std::endl ;
 				std::cout << "keith norm: " << Keith_norm << std::endl ;
 			)
@@ -363,14 +405,30 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 			for (int iib=0;iib<2;iib++){
 				int jetIndex=beam_particles[iib];
 				const PseudoJet& jc=cs.jets()[jetIndex];
-				NAMED_DEBUG("BOOST",std::cout << "Jet before boost: " << jc  << std::endl; );
+				NAMED_DEBUG("BOOST",std::cout << "Beam jet before boost: " << jc  << std::endl; );
 				PseudoJet& j=const_cast<PseudoJet&>(jc);
 				TLorentzVector bm(j.px(),j.py(),j.pz(),j.E());
-				NAMED_DEBUG("BOOST",std::cout << "Before boosts: " << bm  << std::endl; );
 				bm.Boost(0,0,keith_beta);
-				NAMED_DEBUG("BOOST",std::cout << "Jet after boost: " << cs.jets()[jetIndex]  << std::endl; );
+				NAMED_DEBUG("BOOST",std::cout << "Beam Jet after boost: " << bm  << std::endl; );
 			}
 
+
+
+
+			NAMED_DEBUG("BOOST",std::cout << "CMF before z boost: " << q  << std::endl; );
+			q.Boost(0,0,-keith_beta);
+			NAMED_DEBUG("BOOST",std::cout << "CMF after z boost: " << q  << std::endl; );
+			q.Boost(-boostx,-boosty,0);
+			NAMED_DEBUG("BOOST",std::cout << "CMF after xy boost: " << q  << std::endl; );
+
+			double qz=q.E()/2.0;
+
+			bj1.reset_momentum(0,0,qz,qz);
+			bj2.reset_momentum(0,0,-qz,qz);
+			NAMED_DEBUG("BOOST",std::cout << "beam Jet after boost: " << bj1  << std::endl; );
+			NAMED_DEBUG("BOOST",std::cout << "beam Jet after boost: " << bj2  << std::endl; );
+
+*/
 
 			doBoost=false;  //only run the boost once!
 		    z1=cs.jets()[beam_particles[0]].pz();
@@ -384,21 +442,49 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 
 
 	  } else {
-		  const PseudoJet &j1=cs.jets()[candidates[parent1]];
-		  const PseudoJet &j2=cs.jets()[candidates[parent2]];
-		  PseudoJet newjet(j1+j2);
-		  // track the jet flavour
-		  FlavInfo newflav =   flavour_of(j1)
+	  	const PseudoJet &j1=cs.jets()[candidates[parent1]];
+		const PseudoJet &j2=cs.jets()[candidates[parent2]];
+		PseudoJet newjet(j1+j2);
+		// track the jet flavour
+		FlavInfo newflav =   flavour_of(j1)
 							 + flavour_of(j2);
-		  newjet.set_user_info(new FlavInfo(newflav));
-		  int k;
-		  NAMED_DEBUG("BEAM_CLUSTERING",cout << "combining jets " << candidates[parent1] << " and " << candidates[parent2] << endl;)
-		  cs.plugin_record_ij_recombination(candidates[parent1],candidates[parent2], minDistance,   // for jet clustering there is no penatly factor so it's ok to use minDistance
+		newjet.set_user_info(new FlavInfo(newflav));
+		int k;
+		NAMED_DEBUG("BEAM_CLUSTERING",cout << "combining jets " << candidates[parent1] << " and " << candidates[parent2] << endl;)
+		cs.plugin_record_ij_recombination(candidates[parent1],candidates[parent2], minDistance,   // for jet clustering there is no penatly factor so it's ok to use minDistance
 											newjet, k);
-		  candidates.erase(candidates.begin()+parent1);
-		  candidates.erase(candidates.begin()+(parent2-1)); // now this element is one position more to the left. We also know that parent1< parent2
-		  candidates.push_back(k);
-		  NAMED_DEBUG("BEAM_CLUSTERING", cout << "candidates at this point: " ;copy(candidates.begin(),candidates.end(),ostream_iterator<int>(cout," ")); cout << endl)
+		NAMED_DEBUG("BEAM_CLUSTERING",cout << "combination resulted in jet " << k << cs.jets()[k] << endl;)
+		candidates.erase(candidates.begin()+parent1);
+		candidates.erase(candidates.begin()+(parent2-1)); // now this element is one position more to the left. We also know that parent1< parent2
+		candidates.push_back(k);
+
+		NAMED_DEBUG("BEAM_CLUSTERING", cout << "candidates at this point: " ;copy(candidates.begin(),candidates.end(),ostream_iterator<int>(cout," ")); cout << endl)
+
+
+		if (doBoost && nclus==0){
+			int jetIndex=beam_particles[0];
+			PseudoJet& bj1=const_cast<PseudoJet&>(cs.jets()[jetIndex]);
+			int jetIndex2=beam_particles[1];
+			PseudoJet& bj2=const_cast<PseudoJet&>(cs.jets()[jetIndex2]);
+
+			PseudoJet& j12=const_cast<PseudoJet&>(cs.jets()[k]);
+			FSRboost(
+				bj1,bj2,
+				j1,j2,
+				j12,
+				candidates,
+				cs,
+				beam_particles
+			);
+
+			doBoost=false;  //only run the boost once!
+		    z1=cs.jets()[beam_particles[0]].pz();
+		    z2=cs.jets()[beam_particles[1]].pz();
+			yCMF=0.5*log(z1/(-z2));
+			NAMED_DEBUG("CMS_RAPIDITY",cout << " CMS rapidity: " << yCMF  << " (after boost)" <<endl;)
+
+		}
+
 
 	  }
 
@@ -406,9 +492,9 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 		extras->_beam_flavs.push_back(beam_flavour);
 		extras->_beam_indices.push_back(beam_index);
 		extras->_stepIsFlavourFriendly.push_back(friendly);
+	NAMED_DEBUG("BEAM_CLUSTERING",cout << "=== end of clustering round: ===" << nclus << endl;)
 
 	}
-
   extras->_bf_offset = int(extras->_beam_flavs.size()) - int(cs.history().size());
   auto_ptr<ClusterSequence::Extras> extras_auto_ptr(extras);
   cs.plugin_associate_extras(extras_auto_ptr);
