@@ -261,7 +261,7 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 
 		if (parent1==-3 && parent2==-3){
 		  	throw Error("no clustering found!");
-		  } else {
+		} else {
 		  	if (parent2==-1){
 		  		if (beam_index==1){
 		  			NAMED_DEBUG("CLUSTERING_DECISION",cout << "==> decided to merge jet "<< candidates[parent1] << " and forward beam" << endl;)
@@ -271,7 +271,7 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 		  	} else {
 		  		NAMED_DEBUG("CLUSTERING_DECISION",cout << "==> decided to merge jet "<< candidates[parent1] << " and jet " << candidates[parent2] << endl;)
 		  	}
-		  }
+		}
 
 	  for (int ii=2;ii<cs.jets().size();ii++){
 		pt[ii]=cs.jets()[ii].pt();

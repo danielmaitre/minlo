@@ -657,7 +657,9 @@ double MINLOcomputeSudakov(MinloInfo& MI,NtupleInfo<MAX_NBR_PARTICLES>& Ev, int 
 	double sfactor=getSudakovFactor(cs,MI.d_njetsOrig,nclusterings,scales,Qlocal,q0,shat,subtraction,basicProcess,isReal);
 	NAMED_DEBUG("SUDAKOV_FACTOR",cout << "Factor from sudakovs: " << sfactor << endl;)
 	NAMED_DEBUG("SUDAKOV_FACTOR",cout << "born subtraction: " << subtraction << endl;)
-	NAMED_DEBUG("ALPHAS_SCALES",cout << "number of clustering scales: " << scales.size()<< endl;)
+	NAMED_DEBUG("ALPHAS_SCALES",cout << "number of clustering scales: " << scales.size();
+		for (int si=0; si<scales.size();si++){ cout << " " << scales[si]; }; cout << endl
+	)
 	double oldAlpha=Ev.alphas;
 	double alphaFactor=1;
 	double alphaFactorNum=1;
@@ -834,7 +836,14 @@ void printFlavourPart(const std::vector<fastjet::PseudoJet>& input_particles){
 const int nMomenta=20;
 
 
-double MINLO_computeSudakovKeith(NtupleInfo<MAX_NBR_PARTICLES>& Ev,int flg_bornonly,int imode,int isReal,double BeamEnergy){
+double MINLO_computeSudakovKeith(
+	NtupleInfo<MAX_NBR_PARTICLES>& Ev,
+	int flg_bornonly,
+	int imode,
+	int isReal,
+	double BeamEnergy,
+	int nlegborn,
+	int st_bornorder){
 
 	double kn_pborn[4*nMomenta];
 	double kn_cmpborn[4*nMomenta];
@@ -898,8 +907,8 @@ double MINLO_computeSudakovKeith(NtupleInfo<MAX_NBR_PARTICLES>& Ev,int flg_borno
 
 	}
 
-    int      nlegborn=6;      //  ! Number of final state particle in Born plus 2.
-    int      st_bornorder=2;    //! Number of powers of aS in the Born (ZJ=1, ZJJ=2)
+    //int      nlegborn=6;      //  ! Number of final state particle in Born plus 2.
+    //int      st_bornorder=2;    //! Number of powers of aS in the Born (ZJ=1, ZJJ=2)
 //    double      st_muren2=fixedScaleForNLO*fixedScaleForNLO;       //! The mu_R^2 value that was used to evaluate virt
     double      st_muren2=Ev.muR*Ev.muR;       //! The mu_R^2 value that was used to evaluate virt
 //    double      st_muren2=Ev.muR*Ev.muR;       //! The mu_R^2 value that was used to evaluate virt

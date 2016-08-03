@@ -38,7 +38,9 @@ int main(){
 		int flg_bornonly=0;    //! Are we feeding through only Born stuff (1), or NLO (0)?
 		int imode=1;           //! imode=1 for Born, imode=2 for all NLO contribs
 		int isReal=0;          //! Set isReal=1 for real kinematics, 0 otherwise.
-		double keith = MINLO_computeSudakovKeith(r.d_NI,flg_bornonly,imode,isReal,MI.d_energy);
+		int nlegborn=6;
+		int st_bornorder=2;
+		double keith = MINLO_computeSudakovKeith(r.d_NI,flg_bornonly,imode,isReal,MI.d_energy,nlegborn,st_bornorder);
 		cout << "Keith weight: " << keith << endl;
 		cout << "(" << r.d_NI.id<<") Keith weight/my weight: " << keith/alphaFactor << endl;
 

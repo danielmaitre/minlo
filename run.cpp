@@ -31,6 +31,8 @@ int main(int ac,char** av){
     	("keith.flg_bornonly", po::value<int>(), " Are we feeding through only Born stuff (1), or NLO (0)?")
     	("keith.imode", po::value<int>(), " imode=1 for Born, imode=2 for all NLO contribs")
     	("keith.isReal", po::value<int>(), " Set isReal=1 for real kinematics, 0 otherwise.")
+    	("keith.nlegborn", po::value<int>(), " number of legs in the born process (including initial state f.ex. W+2j -->6)")
+    	("keith.st_bornorder", po::value<int>(), " power of alphas in the born process")
 
     	;
 
@@ -120,15 +122,17 @@ int main(int ac,char** av){
 
 		int flg_bornonly=vm["keith.flg_bornonly"].as<int>();    //! Are we feeding through only Born stuff (1), or NLO (0)?
 		int imode=vm["keith.imode"].as<int>();           //! imode=1 for Born, imode=2 for all NLO contribs
+		int nlegborn=vm["keith.nlegborn"].as<int>();           //
+		int st_bornorder=vm["keith.st_bornorder"].as<int>();           //
 		// ignore vm["keith.isReal"].as<int>() as it doesn't know the difference
 		// between real and subtraction
 		int isReal;
-		if (r.d_NI.nparticle==4){
-			isReal=0;          //! Set isReal=1 for real kinematics, 0 otherwise.
+		if ( r.d_NI.nparticle==(nlegborn-2) ) {
+			isReal=0; //! Set isReal=1 for real kinematics, 0 otherwise.
 		} else {
 			isReal=1;          //! Set isReal=1 for real kinematics, 0 otherwise.
 		}
-		double keith = MINLO_computeSudakovKeith(r.d_NI,flg_bornonly,imode,isReal,MI.d_energy);
+		double keith = MINLO_computeSudakovKeith(r.d_NI,flg_bornonly,imode,isReal,MI.d_energy,nlegborn,st_bornorder);
 		if (verbose){
 			cout << "Keith weight: " << keith << endl;
 		}
