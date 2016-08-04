@@ -1134,33 +1134,49 @@ C ---------------------------------------------- C
       logical  i_validflav
       integer  lflav(20)
       integer  ixx
-      integer  el_charge_in,el_charge_out
+      integer  init_n_quarks,init_n_antiquarks
+      integer  final_n_quarks,final_n_antiquarks
       integer  init_baryon_no,final_baryon_no
+      integer  el_charge_in,el_charge_out
       integer  T3,Q
       
       i_validflav = .true.
 
 C - If at any point the clustering returns a process whose flavour is not
 C - consistent with baryon number conservation, "reject" the clustering.
-      init_baryon_no = 0 ; final_baryon_no = 0
+      init_n_quarks  = 0 ; init_n_antiquarks  = 0
+      final_n_quarks = 0 ; final_n_antiquarks = 0
       do ixx=1,2
          if(lflav(ixx).ge.1.and.lflav(ixx).le.6) then
-            init_baryon_no = init_baryon_no+1
+            init_n_quarks = init_n_quarks+1
          endif
          if(lflav(ixx).ge.-6.and.lflav(ixx).le.-1) then
-            init_baryon_no = init_baryon_no-1
+            init_n_antiquarks = init_n_antiquarks+1
          endif
       enddo
       do ixx=3,20
          if(lflav(ixx).ge.1.and.lflav(ixx).le.6) then
-            final_baryon_no = final_baryon_no+1
+            final_n_quarks = final_n_quarks+1
          endif
          if(lflav(ixx).ge.-6.and.lflav(ixx).le.-1) then
-            final_baryon_no = final_baryon_no-1
+            final_n_antiquarks = final_n_antiquarks+1
          endif
       enddo
-
+      init_baryon_no  = init_n_quarks-init_n_antiquarks
+      final_baryon_no = final_n_quarks-final_n_antiquarks
       if(init_baryon_no.ne.final_baryon_no) then
+         i_validflav = .false.
+         return
+      endif
+
+C - *** Process dependent rejection for W/Z+jets only ***
+C - If a clustering leads to an event with only (any number of)
+C - gluons and the W/Z "reject" the clustering: the W/Z must
+C - have a quark line to couple to and you can't make any
+C - quarks by 2->1 clusterings if you only have gluons to
+C - cluster.   
+      if((init_n_quarks +init_n_antiquarks
+     $   +final_n_quarks+final_n_antiquarks).eq.0) then
          i_validflav = .false.
          return
       endif
@@ -1197,16 +1213,6 @@ C - consistent with electric charge conservation, "reject" the clustering.
       enddo
 
       if(el_charge_in.ne.el_charge_out) then
-         i_validflav = .false.
-         return
-      endif
-
-C - If we cluster all the way back to gg->Z "reject" the clustering.
-      if(lflav(1).eq.0.and.lflav(2).eq.0.and.
-     $   lflav( 5).eq.1000000.and.lflav( 6).eq.1000000.and.
-     $   lflav( 7).eq.1000000.and.lflav( 8).eq.1000000.and.
-     $   lflav( 9).eq.1000000.and.lflav(10).eq.1000000.and.
-     $   lflav(11).eq.1000000.and.lflav(12).eq.1000000) then
          i_validflav = .false.
          return
       endif
