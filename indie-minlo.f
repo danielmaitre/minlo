@@ -1135,33 +1135,39 @@ C ---------------------------------------------- C
       integer  lflav(20)
       integer  ixx
       integer  el_charge_in,el_charge_out
-      integer  n_quarks,n_antiquarks
+      integer  init_baryon_no,final_baryon_no
       
       i_validflav = .true.
 
       el_charge_in  = 0
       el_charge_out = 0
 
-C - 03/08/16 - KH fix/hack for W/Z+jets
-C - Count the number of quarks+antiquarks in the event and if this
-C - number is zero (as in e.g. gg->Z) then set i_validflav=.false.
-C - and return so that the clustering is rejected on account of the
-C - current underlying Born being invalid.
-      n_quarks = 0
-      n_antiquarks = 0
-      do ixx=1,20
+C - If at any point the clustering returns a process whose flavour is
+C - not consistent with baryon number conservation, "reject" the clustering.
+      init_baryon_no = 0
+      do ixx=1,2
          if(lflav(ixx).ge.1.and.lflav(ixx).le.6) then
-            n_quarks = n_quarks+1
+            init_baryon_no = init_baryon_no+1
          endif
          if(lflav(ixx).ge.-6.and.lflav(ixx).le.-1) then
-            n_antiquarks = n_antiquarks+1
+            init_baryon_no = init_baryon_no-1
          endif
       enddo
-      if((n_quarks+n_antiquarks).eq.0) then
+      final_baryon_no = 0
+      do ixx=3,20
+         if(lflav(ixx).ge.1.and.lflav(ixx).le.6) then
+            final_baryon_no = final_baryon_no+1
+         endif
+         if(lflav(ixx).ge.-6.and.lflav(ixx).le.-1) then
+            final_baryon_no = final_baryon_no-1
+         endif
+      enddo
+      if(init_baryon_no.ne.final_baryon_no) then
          i_validflav = .false.
          return
       endif
 
+      
       do ixx=1,20
          if(abs(lflav(ixx)).ge.1.and.abs(lflav(ixx)).le.6) then
             if(ixx.le.2) then
