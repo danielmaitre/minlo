@@ -1136,15 +1136,13 @@ C ---------------------------------------------- C
       integer  ixx
       integer  el_charge_in,el_charge_out
       integer  init_baryon_no,final_baryon_no
+      integer  T3,Q
       
       i_validflav = .true.
 
-      el_charge_in  = 0
-      el_charge_out = 0
-
-C - If at any point the clustering returns a process whose flavour is
-C - not consistent with baryon number conservation, "reject" the clustering.
-      init_baryon_no = 0
+C - If at any point the clustering returns a process whose flavour is not
+C - consistent with baryon number conservation, "reject" the clustering.
+      init_baryon_no = 0 ; final_baryon_no = 0
       do ixx=1,2
          if(lflav(ixx).ge.1.and.lflav(ixx).le.6) then
             init_baryon_no = init_baryon_no+1
@@ -1153,7 +1151,6 @@ C - not consistent with baryon number conservation, "reject" the clustering.
             init_baryon_no = init_baryon_no-1
          endif
       enddo
-      final_baryon_no = 0
       do ixx=3,20
          if(lflav(ixx).ge.1.and.lflav(ixx).le.6) then
             final_baryon_no = final_baryon_no+1
@@ -1162,12 +1159,15 @@ C - not consistent with baryon number conservation, "reject" the clustering.
             final_baryon_no = final_baryon_no-1
          endif
       enddo
+
       if(init_baryon_no.ne.final_baryon_no) then
          i_validflav = .false.
          return
       endif
 
-      
+C - If at any point the clustering returns a process whose flavour is not
+C - consistent with electric charge conservation, "reject" the clustering.
+      el_charge_in  = 0 ; el_charge_out = 0
       do ixx=1,20
          if(abs(lflav(ixx)).ge.1.and.abs(lflav(ixx)).le.6) then
             if(ixx.le.2) then
@@ -1201,6 +1201,7 @@ C - not consistent with baryon number conservation, "reject" the clustering.
          return
       endif
 
+C - If we cluster all the way back to gg->Z "reject" the clustering.
       if(lflav(1).eq.0.and.lflav(2).eq.0.and.
      $   lflav( 5).eq.1000000.and.lflav( 6).eq.1000000.and.
      $   lflav( 7).eq.1000000.and.lflav( 8).eq.1000000.and.
