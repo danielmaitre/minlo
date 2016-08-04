@@ -138,7 +138,7 @@ int main(int ac,char** av){
 		}
 
 		double q0,scaleForNLO;
-		double alphaFactor=MINLOcomputeSudakov(MI,r.d_NI,weightType,q0,scaleForNLO);
+		double alphaFactor=r.computeSudakov(MI,weightType,q0,scaleForNLO);
 
 
 

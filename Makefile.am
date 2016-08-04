@@ -17,7 +17,9 @@ libMINLOlib_la_SOURCES = \
 	InterpolatedFunction.cpp InterpolatedFunction.h\
 	indie-minlo.f NLLsudakov.f sudakov.f \
 	debug.h debug.cpp \
-	pdf.h pdf.cpp
+	pdf.h pdf.cpp \
+	utils.h utils.cpp \
+	MinloReader.h MinloReader.cpp
 
 AM_LDFLAGS =  $(FASTJET_LDFLAGS) $(LHAPDF_LDFLAGS) 
 AM_LDFLAGS += $(ROOT_LIBS)

@@ -82,10 +82,6 @@ private:
   int    _imode;
   double _R;
   int _nBoosts;
-  const FlavInfo & flavour_of(const PseudoJet & particle) const {
-    if (particle.has_user_info<FlavInfo>()) return particle.user_info<FlavInfo>();
-    else                                    return _no_flav;
-  }
   static const FlavInfo _no_flav;
   static LimitedWarning _spectators_unhandled;
 
@@ -93,6 +89,14 @@ private:
     FlavInfo forward, backward;
     void label_as_beam() {forward.label_as_beam(); backward.label_as_beam();}
   };
+
+public:
+  static const FlavInfo & flavour_of(const PseudoJet & particle) {
+    if (particle.has_user_info<FlavInfo>()) return particle.user_info<FlavInfo>();
+    else                                    return _no_flav;
+  }
+
+
 };
 
 

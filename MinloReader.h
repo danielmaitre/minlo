@@ -5,17 +5,18 @@
 #include "ntuplereader/nTupleReader.h"
 #include "ntuplereader/NtupleInfo.h"
 #include "ntuplereader/EventReaderBase.h"
+#include "ntuplereader/version.h"
+#include "MinloInfo.h"
+
 
 class MINLOreader : public RootFileReaderBase {
-public:
+  bool d_hasMinlo;
+  public:
   NtupleInfo<MAX_NBR_PARTICLES> d_NI;
-  MINLOreader() {
-    RootFileReaderBase::init(d_NI,"t3");
-  }
+  MINLOreader() ;
   bool nextEntry(){return readNextEntry(d_NI);}
-  void addFiles(const std::vector<std::string>& fs){
-  		RootFileReaderBase::addFiles(d_NI,fs);
-  };
+  void addFiles(const std::vector<std::string>& fs);
+  double computeSudakov(MinloInfo& MI, int weightType,double &q0,double &scaleForNLO);
   virtual ~MINLOreader(){};
 };
 

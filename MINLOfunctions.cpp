@@ -19,6 +19,7 @@
 
 #include "InterpolatedFunction.h"
 #include "pdf.h"
+#include "utils.h"
 
 using namespace std;
 
@@ -125,17 +126,7 @@ void fillJetVector(NtupleInfo<MAX_NBR_PARTICLES>& Ev,std::vector<fastjet::Pseudo
 	}
 }
 
-// assumes the object is either a gluon or a quark, if multiflavoured returns 0
-int pdgFromFlavor(const fastjet::FlavInfo& fi){
-	if (fi.is_multiflavored()){
-		return 0;
-	}
-	for (int i=1;i<=6;i++){
-		if (fi[i]==1) return i;
-		if (fi[i]==-1) return -i;
-	}
-	return 21;
-}
+
 
 void displayClusterHistory(fastjet::ClusterSequence& cs){
 	const std::vector<fastjet::ClusterSequence::history_element> & history = 			cs.history();
@@ -308,6 +299,7 @@ double getSudakovFactor(
       clusteringScales.push_back(sqrt(nextScale2));
       int parent1=history[historyIndex].parent1;
       int parent2=history[historyIndex].parent2;
+
       if (parent2 == cs.BeamJet){
     	  fastjet::PseudoJet j=cs.jets()[history[parent1].jetp_index];
     	  NAMED_DEBUG("BEAM_HISTORY",
@@ -318,7 +310,13 @@ double getSudakovFactor(
 				  cout <<" flavour not friendly!" << endl;
 			  }
     	  )
-		  if (!extras->beam_clustering_flavour_friendly(j)){
+    	  bool hasQs=hasQuarks(cs,maxHist-historyIndex+1);
+    	  NAMED_DEBUG("CLUSTERING_STEPS",
+				 if (!hasQs){
+				 	cout << " stopping recombination here because there is no quarks to couple the vector boson to." << std::endl;
+				 }
+			  )
+		  if (!extras->beam_clustering_flavour_friendly(j) || !hasQs){
 		      //need to remove the scale we just introduced...
 			  clusteringScales.pop_back();
 			  NAMED_DEBUG("CLUSTERING_STEPS",
@@ -333,9 +331,9 @@ double getSudakovFactor(
 			  break;
 		  }
 
-  		if (nextScale2>maxScale2){
+  		  if (nextScale2>maxScale2){
   			maxScale2=nextScale2;
-  		}
+  		  }
 
 
 		  if (extras->beam_it_clusters_with(j)==+1){
@@ -554,7 +552,7 @@ double getSudakovFactor(
 }
 
 
-double MINLOcomputeSudakov(MinloInfo& MI,NtupleInfo<MAX_NBR_PARTICLES>& Ev, int weightType,double &q0,double &scaleForNLO) {
+double MINLOcomputeSudakov(MinloInfo& MI,NtupleInfo<MAX_NBR_PARTICLES>& Ev, int weightType,double &q0,double &scaleForNLO,bool useNewNtupleFormat) {
 
 	std::vector<fastjet::PseudoJet> input_particles;
 
@@ -571,8 +569,13 @@ double MINLOcomputeSudakov(MinloInfo& MI,NtupleInfo<MAX_NBR_PARTICLES>& Ev, int 
 
 	//this is to be replaced by getFlavourChange to use with old nTuples with missing
 	// flavour info, although it didn't reall work...
-	beam1.set_user_info(new fastjet::FlavInfo(evb.id1, fastjet::FlavInfo::beam));
-	beam2.set_user_info(new fastjet::FlavInfo(evb.id2, fastjet::FlavInfo::beam));
+	if (useNewNtupleFormat){
+		beam1.set_user_info(new fastjet::FlavInfo(evb.id1p, fastjet::FlavInfo::beam));
+		beam2.set_user_info(new fastjet::FlavInfo(evb.id2p, fastjet::FlavInfo::beam));
+	} else {
+		beam1.set_user_info(new fastjet::FlavInfo(evb.id1, fastjet::FlavInfo::beam));
+		beam2.set_user_info(new fastjet::FlavInfo(evb.id2, fastjet::FlavInfo::beam));
+	}
 	input_particles.push_back(beam1);
 	input_particles.push_back(beam2);
 
@@ -755,6 +758,8 @@ NtupleInfo<MAX_NBR_PARTICLES> boostedToCMF(NtupleInfo<MAX_NBR_PARTICLES>& orig){
 	evb.x2=ECMFx;
 	evb.id1=orig.id1;
 	evb.id2=orig.id2;
+	evb.id1p=orig.id1p;
+	evb.id2p=orig.id2p;
 	for (int ii=0;ii<orig.nparticle;ii++){
 		TLorentzVector boosted(orig.px[ii],orig.py[ii],orig.pz[ii],orig.E[ii]);
 		boosted.Boost(0,0,beta);
