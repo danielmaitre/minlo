@@ -34,6 +34,7 @@ struct sudakovCandidate {
 	int flavor;
 };
 
+std::ostream & operator<<(std::ostream& ostr, const sudakovCandidate & sc) ;
 
 
 

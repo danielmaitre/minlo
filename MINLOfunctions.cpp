@@ -73,6 +73,11 @@ ostream& print_header(ostream& ostr) {
   return ostr;
 }
 
+std::ostream & operator<<(std::ostream& ostr, const sudakovCandidate & sc){
+	return ostr << "high: " << sc.highScale << " low: " << sc.lowScale << " falv: " << sc.flavor << " hist: " << sc.historyIndex ;
+} ;
+
+
 double getAlphasQ(double Q){
 	double res;
 	if (Q<alphasScaleMin){
@@ -280,123 +285,134 @@ double getSudakovFactor(
 	bool setQ0ToQlocal=false;
 	while (historyIndex <= maxHist) {
       NAMED_DEBUG("CLUSTERING_STEPS",
-    		  cout << " ---- Step " << historyIndex << " ----" << endl;
-      	  	  cout <<"dij: "<< cs.history()[historyIndex].dij<< endl;
-      	)
+    		cout << " ---- Step " << historyIndex << " ----" << endl;
+  	  	cout <<"dij: "<< cs.history()[historyIndex].dij<< endl;
+      )
 		double nextScale2=cs.history()[historyIndex].dij;
-      	if (nextScale2<lastScale2){
-		      NAMED_DEBUG("CLUSTERING_STEPS",
-		    		  cout << " -!!! Step " << historyIndex << " has a lower scale "<< sqrt(nextScale2) << " than before "<< sqrt(lastScale2)<< " , keep last scale" << endl;
-		      	)
+    if (nextScale2<lastScale2){
+			NAMED_DEBUG("CLUSTERING_STEPS",	cout << " -!!! Step " << historyIndex << " has a lower scale "<< sqrt(nextScale2) << " than before "<< sqrt(lastScale2)<< endl;)
 			if (raisingAllTheWay){
 				nextScale2=lastScale2;
+				NAMED_DEBUG("CLUSTERING_STEPS",cout << " keep last scale (raisingAllTheWay=true)" << endl;)
 			} else {
 				lastScale2=nextScale2;
+				NAMED_DEBUG("CLUSTERING_STEPS",cout << " didn't keep last scale (raisingAllTheWay=false)" << endl;)
 			}
 		} else {
 			lastScale2=nextScale2;
 		}
-      clusteringScales.push_back(sqrt(nextScale2));
-      int parent1=history[historyIndex].parent1;
-      int parent2=history[historyIndex].parent2;
+    clusteringScales.push_back(sqrt(nextScale2));
+    int parent1=history[historyIndex].parent1;
+    int parent2=history[historyIndex].parent2;
 
-      if (parent2 == cs.BeamJet){
-    	  fastjet::PseudoJet j=cs.jets()[history[parent1].jetp_index];
-    	  NAMED_DEBUG("BEAM_HISTORY",
-			  cout <<"jet clustered with beam:" << cs.jets()[history[parent1].jetp_index];
-			  if (extras->beam_clustering_flavour_friendly(j)){
+    if (parent2 == cs.BeamJet){
+    	fastjet::PseudoJet j=cs.jets()[history[parent1].jetp_index];
+    	NAMED_DEBUG("BEAM_HISTORY",
+				cout <<"jet clustered with beam:" << cs.jets()[history[parent1].jetp_index];
+				if (extras->beam_clustering_flavour_friendly(j)){
 				  cout <<" flavour friendly!" << endl;
-			  } else {
-				  cout <<" flavour not friendly!" << endl;
-			  }
-    	  )
-    	  bool hasQs=hasQuarks(cs,maxHist-historyIndex+1);
-    	  NAMED_DEBUG("CLUSTERING_STEPS",
-				 if (!hasQs){
+				} else {
+					cout <<" flavour not friendly!" << endl;
+				}
+    	)
+			// Testing whether we lost the quark to which the vector boson couples
+    	bool hasQs=hasQuarks(cs,maxHist-historyIndex);
+    	NAMED_DEBUG("CLUSTERING_STEPS",
+				if (!hasQs){
 				 	cout << " stopping recombination here because there is no quarks to couple the vector boson to." << std::endl;
-				 }
-			  )
+				}
+			)
 		  if (!extras->beam_clustering_flavour_friendly(j) || !hasQs){
-		      //need to remove the scale we just introduced...
+		    //need to remove the scale we just introduced...
 			  clusteringScales.pop_back();
 			  NAMED_DEBUG("CLUSTERING_STEPS",
-				 cout << " stopping recombination here because of flavour incompatibility." << std::endl;
+			  	if (!extras->beam_clustering_flavour_friendly(j) ){
+						cout << " stopping recombination here because of flavour incompatibility." << std::endl;
+					}
+			  	if (!hasQs){
+						cout << " stopping recombination here because of bad born." << std::endl;
+					}
 			  )
 			  if (historyIndex==start){ // if the first recombination fails then q0 should be the ME scale
 				  scales_beamForward.pop_back();
 				  scales_beamBackward.pop_back();
 				  setQ0ToQlocal=true;
 			  }
-
 			  break;
 		  }
-
-  		  if (nextScale2>maxScale2){
+			// keep track of the highest scale
+  		if (nextScale2>maxScale2){
   			maxScale2=nextScale2;
-  		  }
+  		}
 
+			if (extras->beam_it_clusters_with(j)==+1){
+				scales_beamForward.push_back(nextScale2);
+        pdg_beamForward.push_back(pdgFromFlavor(extras->beam_flav_forward(njetsCurrent)));
+        NAMED_DEBUG("BEAM_HISTORY",
+          cout <<"  forward beam before:" << extras->beam_flav_forward(njetsCurrent+1).description() << endl;
+			    cout <<"  forward beam now:" << extras->beam_flav_forward(njetsCurrent).description() << endl;
+        )
+      } else {
+	      scales_beamBackward.push_back(nextScale2);
+        pdg_beamBackward.push_back(pdgFromFlavor(extras->beam_flav_backward(njetsCurrent)));
+        NAMED_DEBUG("BEAM_HISTORY",
+        	cout <<"  backward beam before:" << extras->beam_flav_backward(njetsCurrent+1).description() << endl;
+       		cout <<"  backward beam now:" << extras->beam_flav_backward(njetsCurrent).description() << endl;
+        )
+			}
 
-		  if (extras->beam_it_clusters_with(j)==+1){
-              scales_beamForward.push_back(nextScale2);
-              pdg_beamForward.push_back(pdgFromFlavor(extras->beam_flav_forward(njetsCurrent)));
-        	  NAMED_DEBUG("BEAM_HISTORY",
-        			  cout <<"  forward beam before:" << extras->beam_flav_forward(njetsCurrent+1).description() << endl;
-			  	  	  cout <<"  forward beam now:" << extras->beam_flav_forward(njetsCurrent).description() << endl;
-        	  )
-          } else {
-              scales_beamBackward.push_back(nextScale2);
-         	 pdg_beamBackward.push_back(pdgFromFlavor(extras->beam_flav_backward(njetsCurrent)));
-         	 NAMED_DEBUG("BEAM_HISTORY",
-         			 cout <<"  backward beam before:" << extras->beam_flav_backward(njetsCurrent+1).description() << endl;
-       	     	 	 cout <<"  backward beam now:" << extras->beam_flav_backward(njetsCurrent).description() << endl;
-         	 )
-          }
-
-          if ( history[parent1].parent1 == cs.InexistentParent && history[parent1].parent2 == cs.InexistentParent ){
+			if ( history[parent1].parent1 == cs.InexistentParent && history[parent1].parent2 == cs.InexistentParent ){
         	// this is the case if the jet is an initial particle
-          }
-      } else if ( parent1 >=0 and parent2 >= 0) {
-    	  double lowScale=nextScale2;
-    	  NAMED_DEBUG("CLUSTERING_STEPS",
-			  cout <<"jet clustered together: " << endl
-        		  << cs.jets()[history[parent1].jetp_index]<< endl
-				  << cs.jets()[history[parent2].jetp_index]<< endl;
-          	  cout <<"jet scale: " << sqrt(lowScale) << endl;
-          )
-          int child=history[historyIndex].child;
-          double highScale;
-          if (child>maxHist or child == cs.Invalid){
-        	  NAMED_DEBUG("CLUSTERING_STEPS",
-              cout <<"jet doesn't get recombined, or too late: " << child << endl;
-              cout <<"jet scale of ME: " <<  sqrt(highScale) << endl;
-              )
+      }
+    } else if ( parent1 >=0 and parent2 >= 0) {
+    	double lowScale=nextScale2;
+    	//keep track of highest scale
+    	if (nextScale2>maxScale2){
+  			maxScale2=nextScale2;
+  		}
+    	NAMED_DEBUG("CLUSTERING_STEPS",
+				cout <<"jet clustered together: " << endl
+             << cs.jets()[history[parent1].jetp_index]<< endl
+				     << cs.jets()[history[parent2].jetp_index]<< endl;
+      	cout <<"jet scale: " << sqrt(lowScale) << endl;
+			)
+			int child=history[historyIndex].child;
+			double highScale;
+			if (child>maxHist or child == cs.Invalid){
+				NAMED_DEBUG("CLUSTERING_STEPS",
+					cout <<"jet doesn't get recombined, or too late: " << child << endl;
+					cout <<"jet scale of ME: " <<  sqrt(highScale) << endl;
+				)
 			  sudakovCandidate sc;
 			  sc.lowScale=lowScale;
 			  sc.flavor=pdgFromFlavor(cs.jets()[history[historyIndex].jetp_index].user_info<fastjet::FlavInfo>());
 			  scalesConnectedToCoreProcess.push_back(sc);
-          } else {
-              highScale=history[child].dij;
-        	  NAMED_DEBUG("CLUSTERING_STEPS",
-              cout <<"jet gets recombined at history point: " << child << endl;
-              cout <<"jet scale of child: " <<  sqrt(highScale) << endl;
-              )
-              sudakovCandidate sc;
-        	  sc.highScale=highScale;
-        	  sc.lowScale=lowScale;
-        	  sc.historyIndex=child;
-              sc.flavor=pdgFromFlavor(cs.jets()[history[historyIndex].jetp_index].user_info<fastjet::FlavInfo>());
-              sudakovCandidates.push_back(sc);
-          }
-          int f=pdgFromFlavor(cs.jets()[history[historyIndex].jetp_index].user_info<fastjet::FlavInfo>());
+			} else {
+				highScale=history[child].dij;
+        NAMED_DEBUG("CLUSTERING_STEPS",
+					cout <<"jet gets recombined at history point: " << child << endl;
+					cout <<"jet scale of child: " <<  sqrt(highScale) << endl;
+				)
+        sudakovCandidate sc;
+				sc.highScale=highScale;
+				sc.lowScale=lowScale;
+				sc.historyIndex=child;
+				sc.flavor=pdgFromFlavor(cs.jets()[history[historyIndex].jetp_index].user_info<fastjet::FlavInfo>());
+        sudakovCandidates.push_back(sc);
       }
-      historyIndex++;
-      njetsCurrent--;
+	    int f=pdgFromFlavor(cs.jets()[history[historyIndex].jetp_index].user_info<fastjet::FlavInfo>());
     }
+    historyIndex++;
+    njetsCurrent--;
+  }
 
 
 
 	int nbrClusteringsDone=historyIndex-start;
 	minloImpl::g_nclusterings=nbrClusteringsDone;
+	NAMED_DEBUG("CLUSTERING_STEPS",
+		cout <<"number of clusterings done: " << nbrClusteringsDone << endl;
+	)
 
 	std::vector<fastjet::PseudoJet> jetsLeft=cs.exclusive_jets(njetsStart-nbrClusteringsDone);
 	TLorentzVector coreProcess(basicProcess4Vector);
@@ -425,18 +441,30 @@ double getSudakovFactor(
 		  q02=Qlocal2;
 	}
 
+
+	NAMED_DEBUG("SUDAKOV_CANDIDATES",
+		cout << "Sudakovs for scales connected to core process ("<<scalesConnectedToCoreProcess.size()  << "):"<<endl;
+		for (int isc=0;isc<scalesConnectedToCoreProcess.size();isc++){
+			cout <<  scalesConnectedToCoreProcess[isc] << endl;
+		}
+		cout << "intermediate Sudakovs ("<< sudakovCandidates.size() << "):" <<endl;
+		for (int isc=0;isc<sudakovCandidates.size();isc++){
+			cout <<  sudakovCandidates[isc] << endl;
+		}
+	)
+
 	// need to do this here because I need to know the core scale
 	for (int isc=0;isc<scalesConnectedToCoreProcess.size();isc++){
-        sudakovCandidate& sc=scalesConnectedToCoreProcess[isc];
+    sudakovCandidate& sc=scalesConnectedToCoreProcess[isc];
 		double sudakov,bornSub;//,bornSubNLL;
 		computeSudakov(Qlocal2,sc.lowScale,q02,sc.flavor,sudakov,bornSub);
-        factor*=sudakov;
-       // Keith says we should use the LL one
-        bornSubtraction+=bornSub;
+    factor*=sudakov;
+    // Keith says we should use the LL one
+    bornSubtraction+=bornSub;
 	}
 
 	for (int isc=0;isc<sudakovCandidates.size();isc++){
-        sudakovCandidate& sc=sudakovCandidates[isc];
+		sudakovCandidate& sc=sudakovCandidates[isc];
 		double sudakov,bornSub,bornSubNLL;
 		double highScale;
 		if (sc.historyIndex>=historyIndex){  // that is the sudakov connects to a point in the history further that we stopped!
@@ -445,9 +473,9 @@ double getSudakovFactor(
 			highScale=sc.highScale;
 		}
 		computeSudakov(highScale,sc.lowScale,q02,sc.flavor,sudakov,bornSub);
-        factor*=sudakov;
-       // Keith says we should use the LL one
-        bornSubtraction+=bornSub;
+    factor*=sudakov;
+    // Keith says we should use the LL one
+    bornSubtraction+=bornSub;
 	}
 
 
@@ -486,27 +514,27 @@ double getSudakovFactor(
 	}
 
 	for (int ii=0;ii<scales_beamForward.size()-1;ii++){
-    	double sudakov=nll_sudakov_withInfo(q02,scales_beamForward[ii+1],scales_beamForward[ii],pdg_beamForward[ii] % 21 );
-        factor*=sudakov;
-        double bornSub=EXPSUDAKOV(q02,scales_beamForward[ii+1],scales_beamForward[ii],pdg_beamForward[ii] % 21 );
-        bornSubtraction+=bornSub;
-  	  NAMED_DEBUG("BEAM_SCALES",
-  	    cout << "need sudakov " << sudakov << endl;
-      	  cout << "born sudakov subtraction " << bornSub << endl;
-  	  )
-    }
-  	  NAMED_DEBUG("BEAM_SCALES",    cout << "~~~~~"<< endl;)
-    for (int ii=0;ii<scales_beamBackward.size()-1;ii++){
-    	double sudakov=nll_sudakov_withInfo(q02,scales_beamBackward[ii+1],scales_beamBackward[ii],pdg_beamBackward[ii] % 21);
-        factor*=sudakov;
-        double bornSub=EXPSUDAKOV(q02,scales_beamBackward[ii+1],scales_beamBackward[ii],pdg_beamBackward[ii] % 21 );
-        bornSubtraction+=bornSub;
-    	NAMED_DEBUG("BEAM_SCALES",
-    	    	cout << "need sudakov " << sudakov << endl;
-    		cout << "born sudakov subtraction " << bornSub << endl;
-    	  )
-    }
-  	NAMED_DEBUG("EXTERNAL_FACTORS",
+  	double sudakov=nll_sudakov_withInfo(q02,scales_beamForward[ii+1],scales_beamForward[ii],pdg_beamForward[ii] % 21 );
+    factor*=sudakov;
+    double bornSub=EXPSUDAKOV(q02,scales_beamForward[ii+1],scales_beamForward[ii],pdg_beamForward[ii] % 21 );
+    bornSubtraction+=bornSub;
+  	NAMED_DEBUG("BEAM_SCALES",
+  		cout << "need sudakov " << sudakov << endl;
+    	cout << "born sudakov subtraction " << bornSub << endl;
+  	)
+  }
+  NAMED_DEBUG("BEAM_SCALES",    cout << "~~~~~"<< endl;)
+  for (int ii=0;ii<scales_beamBackward.size()-1;ii++){
+   	double sudakov=nll_sudakov_withInfo(q02,scales_beamBackward[ii+1],scales_beamBackward[ii],pdg_beamBackward[ii] % 21);
+		factor*=sudakov;
+    double bornSub=EXPSUDAKOV(q02,scales_beamBackward[ii+1],scales_beamBackward[ii],pdg_beamBackward[ii] % 21 );
+		bornSubtraction+=bornSub;
+		NAMED_DEBUG("BEAM_SCALES",
+			cout << "need sudakov from high scale " << scales_beamBackward[ii+1] << " to scale " << scales_beamBackward[ii] << sudakov << endl;
+   		cout << "born sudakov subtraction " << bornSub << endl;
+ 	  )
+	}
+ 	NAMED_DEBUG("EXTERNAL_FACTORS",
     cout << " --- external factors ---- " << endl;
   	)
     // don't take initial state particles (they were already taken into account in the beam sudakovs)
@@ -709,7 +737,10 @@ double MINLOcomputeSudakov(MinloInfo& MI,NtupleInfo<MAX_NBR_PARTICLES>& Ev, int 
 	if (MI.d_type==MinloInfo::born){
 		double b0=(33-2*5)/12.0/3.14159265358979323846264;
 		//double fullSubtraction= alphaForNLO*(subtraction+d_njetsOrig*b0*2*log(scaleForNLO/fixedScaleForNLO));
-		double fullSubtraction= alphaForNLO*(subtraction+MI.d_njetsOrig*b0*2*log(scaleForNLO/Ev.muR));
+		double fullSubtraction=
+			alphaForNLO*(
+				subtraction+MI.d_njetsOrig*b0*2*log(scaleForNLO/Ev.muR)
+				);
 		double bornFactor=(1+fullSubtraction);
 		NAMED_DEBUG("ALPHAS_SCALES",cout <<"full subtraction: " << fullSubtraction <<  endl;)
 		NAMED_DEBUG("ALPHAS_SCALES",cout <<"full born factor: " << bornFactor <<  endl;)

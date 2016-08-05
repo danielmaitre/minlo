@@ -9,6 +9,7 @@
 #include "TLorentzVector.h"
 #include <iomanip>
 #include "boosts.h"
+#include "../utils.h"
 
 using namespace std;
 
@@ -193,13 +194,23 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 	  int parent2=-3;
 	  //at this point np is the number of jets
 	  for (int candidateIndex=0;candidateIndex<candidates.size();candidateIndex++){
-		  int jetIndex1=candidates[candidateIndex];
+			int jetIndex1=candidates[candidateIndex];
 		  double diB=cs.jets()[jetIndex1].pt();
 		  double diB2=diB*diB;
 		  const PseudoJet& j1=cs.jets()[jetIndex1];
 		  NAMED_DEBUG("BEAM_CLUSTERING",cout << "jet flavor " << flavour_of(j1).description() << endl;)
 		  FlavInfo fb=beam_flavour.backward - flavour_of(j1);
 		  FlavInfo ff=beam_flavour.forward - flavour_of(j1);
+		  int nQ=0;
+		  for (int otherCandidateIndex=0;otherCandidateIndex<candidates.size();otherCandidateIndex++){
+				if (otherCandidateIndex==candidateIndex){continue;}
+				int pdgOther=pdgFromFlavor(flavour_of(cs.jets()[candidates[otherCandidateIndex]]));
+				if (pdgOther!=0 && abs(pdgOther)<6 ){
+					nQ++;
+				}
+			}
+			int pdgfb=pdgFromFlavor(beam_flavour.forward);
+			int pdgbb=pdgFromFlavor(beam_flavour.backward);
 
 		  double yjet=j1.rap();
 		  double pt=j1.pt();
@@ -208,23 +219,45 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 		  double penaltyBackward=1;
 		  if (yjet>yCMF){
 			  penaltyBackward*=100000;
+				NAMED_DEBUG("PENALTY",cout << "clustering with backward jet disfavoured because of rapidity " << endl;)
 		  } else {
 			  penaltyForward*=100000;
+				NAMED_DEBUG("PENALTY",cout << "clustering with forward jet disfavoured because of rapidity " << endl;)
 		  }
 		  if (ff.is_multiflavored() ){  // || (ff.is_flavorless() && !beam_flavour.forward.is_flavorless() )){   // it is ok to merge gluons into gluon
 			  penaltyForward*=10000000;
+				NAMED_DEBUG("PENALTY",cout << "clustering with forward jet leads to multi-flavoured beam!" << endl;)
 		  }
 
 		  if (fb.is_multiflavored() ){ // || (fb.is_flavorless() && !beam_flavour.backward.is_flavorless())){
 			  penaltyBackward*=10000000;
+				NAMED_DEBUG("PENALTY",cout << "clustering with backward jet leads to multi-flavoured beam!" << endl;)
 		  } ;
 
+			if (nQ==0){ // if nQ is >=1 we are ok, there will be at least one beam particle that is a quark
+				bool fbeamIsQuark=(pdgfb!=0 && abs(pdgfb)<6 );
+				bool bbeamIsQuark=(pdgbb!=0 && abs(pdgbb)<6 );
+				int newpdgfb=pdgFromFlavor(ff);
+				int newpdgbb=pdgFromFlavor(fb);
+				bool newfbeamIsQuark=(newpdgfb!=0 && abs(newpdgfb)<6 );
+				bool newbbeamIsQuark=(newpdgbb!=0 && abs(newpdgbb)<6 );
+
+				if (!(fbeamIsQuark && newbbeamIsQuark) ){
+					penaltyBackward*=100000;
+					NAMED_DEBUG("PENALTY",cout << "clustering with backward jet would lead to bad born " << endl;)
+				}
+				if (!(bbeamIsQuark && newfbeamIsQuark) ){
+					penaltyForward*=100000;
+					NAMED_DEBUG("PENALTY",cout << "clustering with forward jet would lead to bad born " << endl;)
+				}
+
+			}
 
 
 		  NAMED_DEBUG("BEAM_CLUSTERING",cout << "considering forward merge: diB("<<jetIndex1<<") = " << diB << " penalty: " << penaltyForward <<endl;)
 		  NAMED_DEBUG("BEAM_CLUSTERING",cout << "forward beam flavor " << beam_flavour.forward.description()	 << endl;)
 		  NAMED_DEBUG("BEAM_CLUSTERING",cout << "projected flavor forward: " << ff.description() << endl;)
-		  if (diB2*penaltyForward<minDistance && penaltyForward < penaltyBackward ){ // at least one of the two has the penalty for the wrong y direction
+		  if (diB2*penaltyForward<minDistance && penaltyForward <= penaltyBackward ){ // at least one of the two has the penalty for the wrong y direction
 			  minDistance=diB2*penaltyForward; // I can do this because I don't use this as the scale
 			  parent1=candidateIndex;
 			  parent2=-1;
@@ -233,7 +266,7 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 		  NAMED_DEBUG("BEAM_CLUSTERING",cout << "considering backward diB("<<jetIndex1<<") = " << diB << " penalty: " << penaltyBackward <<endl;)
 		  NAMED_DEBUG("BEAM_CLUSTERING",cout << "backward beam flavor " << beam_flavour.backward.description()	 << endl;)
 		  NAMED_DEBUG("BEAM_CLUSTERING",cout << "projected flavor backward: " << fb.description() << endl;)
-		  if (diB2*penaltyBackward<minDistance && penaltyForward > penaltyBackward){
+		  if (diB2*penaltyBackward<minDistance && penaltyForward >= penaltyBackward){
 			  minDistance=diB2*penaltyBackward;  // I can do this because I don't use this as the scale
 			  parent1=candidateIndex;
 			  parent2=-1;
@@ -249,8 +282,32 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 			  } else {
 				  d=cs.jets()[jetIndex1].kt_distance(cs.jets()[index2]);
 			  }
-			  NAMED_DEBUG("BEAM_CLUSTERING",cout << "dij("<<jetIndex1<<","<< index2 << ") = " << sqrt(d) << endl;)
-			  if (d<minDistance){
+
+				double penaltyMerge=1.0;
+			  int nQ=0;
+		  	for (int otherCandidateIndex=0;otherCandidateIndex<candidates.size();otherCandidateIndex++){
+					if (otherCandidateIndex==candidateIndex || otherCandidateIndex==candidateIndex2){continue;}
+					int pdgOther=pdgFromFlavor(flavour_of(cs.jets()[candidates[otherCandidateIndex]]));
+					if (pdgOther!=0 && abs(pdgOther)<6 ){
+						nQ++;
+					}
+				}
+
+				if (nQ==0){ // if nQ is >=1 we are ok, there will be at least one beam particle that is a quark
+					bool fbeamIsQuark=(pdgfb!=0 && abs(pdgfb)<6 );
+					bool bbeamIsQuark=(pdgbb!=0 && abs(pdgbb)<6 );
+					int pdgMerged=pdgFromFlavor(fi);
+					if ( pdgMerged!=0 && abs(pdgMerged)<6 ) {
+						penaltyMerge=1.0;
+					}
+					else if (!(fbeamIsQuark && bbeamIsQuark) ){
+						penaltyMerge*=100000;
+						NAMED_DEBUG("PENALTY",cout << "clustering jets together would lead to bad born " << endl;)
+					}
+				}
+
+			  NAMED_DEBUG("BEAM_CLUSTERING",cout << "dij("<<jetIndex1<<","<< index2 << ") = " << sqrt(d) << " penalty: " << penaltyMerge << endl;)
+			  if (d*penaltyMerge < minDistance){
 				  minDistance=d;
 				  parent1=candidateIndex;
 				  parent2=candidateIndex2;
