@@ -217,6 +217,7 @@ double getSudakovFactor(
 	}
 
 	double lastScale2=1; // don't go lower than that..
+	int additionalExternal=-1;
 	const THEPLUGIN::Extras * extras =
 			dynamic_cast<const THEPLUGIN::Extras *>(cs.extras());
 
@@ -254,6 +255,7 @@ double getSudakovFactor(
     	        		  << cs.jets()[history[parent2].jetp_index]<< endl;
     	          cout <<"jet scale: " << sqrt(lowScale) << endl;
     	          )
+							additionalExternal=i;
     	      }
 	}
 
@@ -419,12 +421,12 @@ double getSudakovFactor(
 	for (int ij=0;ij<jetsLeft.size();ij++){
 		fastjet::PseudoJet& j = jetsLeft[ij];
 		NAMED_DEBUG("CORE_PROCESS_SCALE",
-			std::cout << "core process vector: " << coreProcess.E() <<" " << coreProcess.X() << " " << coreProcess.Y() << " " <<  coreProcess.Z() << std::endl;
+			std::cout << "core process vector so far: " << coreProcess.E() <<" " << coreProcess.X() << " " << coreProcess.Y() << " " <<  coreProcess.Z() << std::endl;
+			std::cout << "now adding jet " << j.E() <<" " << j.px() << " " << j.py() << " " <<  j.pz() << std::endl;
 			std::cout << "core process scale so far: " << coreProcess.M() << std::endl;);
 			coreProcess+=TLorentzVector(j.px(),j.py(),j.pz(),j.E());
-
 	}
-	NAMED_DEBUG("CORE_PROCESS_SCALE", std::cout << "final core process scale: " << coreProcess.M() << std::endl;);
+	NAMED_DEBUG("CORE_PROCESS_SCALE", std::cout << "final core process scale: " << coreProcess.M() << " Q^2: "<< coreProcess.M() *coreProcess.M() <<std::endl;);
 
 	Qlocal=coreProcess.M();
 	double Qlocal2=Qlocal*Qlocal;
@@ -538,7 +540,15 @@ double getSudakovFactor(
     cout << " --- external factors ---- " << endl;
   	)
     // don't take initial state particles (they were already taken into account in the beam sudakovs)
-    for (int j=2; j<nparticles;j++){
+		std::vector<int> externals;
+		for (int j=2; j<nparticles;j++){externals.push_back(j);}
+		// if the first clustering is jet clustering I need to include the result of
+		// that clustering in the external particles. Technically I should remove the parents of
+		// this node, but they will all lead to sudakovs of 1.
+		if (additionalExternal>0){externals.push_back(additionalExternal);}
+		NAMED_DEBUG("EXTERNAL_FACTORS",cout <<"external particles: "; for (int iext=0; iext<externals.size();iext++){ cout << " " << externals[iext];};cout << endl;)
+    for (int iext=0; iext<externals.size();iext++){
+        int j=externals[iext];
         int child=history[j].child;
         double highScale2;
         // the last clustering happened at history index historyIndex-1 if the clustering got interrupted
@@ -626,6 +636,7 @@ double MINLOcomputeSudakov(MinloInfo& MI,NtupleInfo<MAX_NBR_PARTICLES>& Ev, int 
 	}
 	fastjet::JetDefinition jet_def = new fastjet::MyFlavKtPlugin(imode, R,nb);
 	fastjet::ClusterSequence cs(input_particles, jet_def);
+	const THEPLUGIN::Extras * extras = dynamic_cast<const THEPLUGIN::Extras *>(cs.extras());
 	NAMED_DEBUG("EVENT_INCL_VIEW", printEventInclView(cs,0.0);)
 	// next look at the exclusive clustering, viewing this as a 2-jet event
 	// (beware when doing this with "ktfs" type algorithms, which leave
@@ -657,7 +668,7 @@ double MINLOcomputeSudakov(MinloInfo& MI,NtupleInfo<MAX_NBR_PARTICLES>& Ev, int 
 			evb.E[0]
 			);
 	NAMED_DEBUG("CORE_PROCESS_SCALE",
-		std::cout << "core process vector: " << basicProcess.E() <<" " << basicProcess.X() << " " << basicProcess.Y() << " " <<  basicProcess.Z() << std::endl;
+		std::cout << "core process vector after first lepton: " << basicProcess.E() <<" " << basicProcess.X() << " " << basicProcess.Y() << " " <<  basicProcess.Z() << std::endl;
 	)
 	basicProcess+=TLorentzVector(
 			evb.px[1],
@@ -666,9 +677,26 @@ double MINLOcomputeSudakov(MinloInfo& MI,NtupleInfo<MAX_NBR_PARTICLES>& Ev, int 
 			evb.E[1]
 			);
 	NAMED_DEBUG("CORE_PROCESS_SCALE",
-		std::cout << "core process vector: " << basicProcess.E() <<" " << basicProcess.X() << " " << basicProcess.Y() << " " <<  basicProcess.Z() << std::endl;
+		std::cout << "core process vector after second lepton: " << basicProcess.E() <<" " << basicProcess.X() << " " << basicProcess.Y() << " " <<  basicProcess.Z() << std::endl;
 	)
-
+	if (extras->hasFSRboost()){
+		double boostVec[3];
+		extras->getFSRboost(&boostVec[0]);
+		basicProcess.Boost(boostVec[0],boostVec[1],boostVec[2]);
+		NAMED_DEBUG("CORE_PROCESS_SCALE",
+			std::cout << "core process vector after boost: " << basicProcess.E() <<" " << basicProcess.X() << " " << basicProcess.Y() << " " <<  basicProcess.Z() << std::endl;
+		)
+	}
+	if (extras->hasISRboost()){
+		double boostVec[3];
+		extras->getISRzboost(&boostVec[0]);
+		basicProcess.Boost(boostVec[0],boostVec[1],boostVec[2]);
+		extras->getISRxyboost(&boostVec[0]);
+		basicProcess.Boost(boostVec[0],boostVec[1],boostVec[2]);
+		NAMED_DEBUG("CORE_PROCESS_SCALE",
+			std::cout << "core process vector after boost: " << basicProcess.E() <<" " << basicProcess.X() << " " << basicProcess.Y() << " " <<  basicProcess.Z() << std::endl;
+		)
+	}
 	double Q=basicProcess.M();
 	//take all jets, not only those who passed
 	TLorentzVector fullProcess=basicProcess;
@@ -879,7 +907,9 @@ double MINLO_computeSudakovKeith(
 	int isReal,
 	double BeamEnergy,
 	int nlegborn,
-	int st_bornorder){
+	int st_bornorder,
+	bool useMinloIDs
+	){
 
 	double kn_pborn[4*nMomenta];
 	double kn_cmpborn[4*nMomenta];
@@ -897,10 +927,13 @@ double MINLO_computeSudakovKeith(
 	kn_pborn[5]=0;
 	kn_pborn[6]=0;
 	kn_pborn[7]=-E*Ev.x2;
-
-	flav[0]=Ev.id1%21;
-	flav[1]=Ev.id2%21;
-
+	if (useMinloIDs){
+		flav[0]=Ev.id1p%21;
+		flav[1]=Ev.id2p%21;
+	} else {
+		flav[0]=Ev.id1%21;
+		flav[1]=Ev.id2%21;
+	}
 	double LabE=E*(Ev.x1+Ev.x2);
 	double Labz=E*(Ev.x1-Ev.x2);
 	double beta=-Labz/LabE;

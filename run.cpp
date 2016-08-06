@@ -126,13 +126,16 @@ int main(int ac,char** av){
 		int st_bornorder=vm["keith.st_bornorder"].as<int>();           //
 		// ignore vm["keith.isReal"].as<int>() as it doesn't know the difference
 		// between real and subtraction
+
+		bool useMinloIDs=true;
+
 		int isReal;
 		if ( r.d_NI.nparticle==(nlegborn-2) ) {
 			isReal=0; //! Set isReal=1 for real kinematics, 0 otherwise.
 		} else {
 			isReal=1;          //! Set isReal=1 for real kinematics, 0 otherwise.
 		}
-		double keith = MINLO_computeSudakovKeith(r.d_NI,flg_bornonly,imode,isReal,MI.d_energy,nlegborn,st_bornorder);
+		double keith = MINLO_computeSudakovKeith(r.d_NI,flg_bornonly,imode,isReal,MI.d_energy,nlegborn,st_bornorder,useMinloIDs);
 		if (verbose){
 			cout << "Keith weight: " << keith << endl;
 		}

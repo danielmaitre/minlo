@@ -128,9 +128,24 @@ public:
 
   virtual std::string description() const {return "the extras class for FlavKtPlugin";}  
 
+  void setFSRboost(double x, double y,double z){_hasFSRboost=true;  _FSRboost[0]=x,_FSRboost[1]=y;_FSRboost[2]=z; }
+  void getFSRboost(double* vec) const { vec[0]=_FSRboost[0]; vec[1]=_FSRboost[1]; vec[2]=_FSRboost[2]; }
+
+  void setISRxyboost(double x, double y,double z){_hasISRboost=true;  _ISRxyboost[0]=x,_ISRxyboost[1]=y;_ISRxyboost[2]=z; }
+  void getISRxyboost(double* vec) const { vec[0]=_ISRxyboost[0]; vec[1]=_ISRxyboost[1]; vec[2]=_ISRxyboost[2]; }
+  void setISRzboost(double x, double y,double z){_hasISRboost=true;  _ISRzboost[0]=x,_ISRzboost[1]=y;_ISRzboost[2]=z; }
+  void getISRzboost(double* vec) const { vec[0]=_ISRzboost[0]; vec[1]=_ISRzboost[1]; vec[2]=_ISRzboost[2]; }
+
+  bool hasFSRboost() const { return _hasFSRboost;}
+  bool hasISRboost() const { return _hasISRboost;}
+
+
 protected:
   // constructor is not intended for public use...
-  Extras(const ClusterSequence & cs) : _cs(cs) {}
+  Extras(const ClusterSequence & cs) : _cs(cs) {
+  _hasISRboost=false;
+  _hasFSRboost=false;
+  }
 
   std::vector<MyFlavKtPlugin::BeamFlavPair> _beam_flavs;
   std::vector<int>                        _beam_indices;
@@ -142,6 +157,12 @@ protected:
   /// return the index of _beam_flavs that corresponds to the beam
   /// flavour at the stage where we have exactly n_exclusive_jets
   int bf_index(int n_exclusive_jets) const;
+
+  bool _hasISRboost;
+  bool _hasFSRboost;
+  double _ISRzboost[3];
+  double _ISRxyboost[3];
+  double _FSRboost[3];
 };
 
 

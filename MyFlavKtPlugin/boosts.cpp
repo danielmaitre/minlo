@@ -9,7 +9,8 @@ void ISRboost(fastjet::PseudoJet& bj1,fastjet::PseudoJet& bj2,
 				const fastjet::PseudoJet& j1,
 				const vector<int>& candidates,
 				fastjet::ClusterSequence & cs,
-				const vector<int>& beam_particles
+				const vector<int>& beam_particles,
+				double* boostzVec,double *boostxyVec
 				){
 
 			  double q0=bj1.E()+bj2.E()-j1.E();
@@ -18,7 +19,7 @@ void ISRboost(fastjet::PseudoJet& bj1,fastjet::PseudoJet& bj2,
 			  double krec2=j1.px()*j1.px()+j1.py()*j1.py()+j1.pz()*j1.pz();
 			  double krec=sqrt(krec2);
 			  double recMass2=q0*q0-krec2;
-
+				boostzVec[0]=0;boostzVec[1]=0;boostzVec[2]=keith_beta;
 
 			  double jperp=j1.perp();
 			double norm=sqrt(j1.px()*j1.px()+j1.py()*j1.py()+j1.pz()*j1.pz());
@@ -26,6 +27,8 @@ void ISRboost(fastjet::PseudoJet& bj1,fastjet::PseudoJet& bj2,
 
 			double boostx=-j1.px()/Keith_norm;
 			double boosty=-j1.py()/Keith_norm;
+			boostxyVec[0]=-boostx;boostxyVec[1]=-boosty;boostxyVec[2]=0;
+
 
 
 			TLorentzVector q(-j1.px(),-j1.py(),-j1.pz(),-j1.E());
@@ -90,7 +93,7 @@ void FSRboost(fastjet::PseudoJet& bj1,fastjet::PseudoJet& bj2,
 				fastjet::PseudoJet& j12,
 				const vector<int>& candidates,
 				fastjet::ClusterSequence & cs,
-				const vector<int>& beam_particles
+				const vector<int>& beam_particles,double* boostVec
 				){
 
 	double q0=2*bj1.E();
@@ -108,6 +111,10 @@ void FSRboost(fastjet::PseudoJet& bj1,fastjet::PseudoJet& bj2,
 	double vecx=beta*vecnx;
 	double vecy=beta*vecny;
 	double vecz=beta*vecnz;
+
+	boostVec[0]=vecx;
+	boostVec[1]=vecy;
+	boostVec[2]=vecz;
 
 	TLorentzVector q(-j1.px()-j2.px(),-j1.py()-j2.py(),-j1.pz()-j2.pz(),-j1.E()-j2.E());
 	TLorentzVector m1(bj1.px(),bj1.py(),bj1.pz(),bj1.E());

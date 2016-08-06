@@ -9,7 +9,8 @@ void ISRboost(fastjet::PseudoJet& bj1,fastjet::PseudoJet& bj2,
 	      const fastjet::PseudoJet& j1,
 	      const std::vector<int>& candidates,
 	      fastjet::ClusterSequence & cs,
-	      const std::vector<int>& beam_particles
+	      const std::vector<int>& beam_particles,
+	      double* boostzVec,double* boostxyVec
 	      );
 
 void FSRboost(fastjet::PseudoJet& bj1,fastjet::PseudoJet& bj2,
@@ -18,7 +19,8 @@ void FSRboost(fastjet::PseudoJet& bj1,fastjet::PseudoJet& bj2,
 	      fastjet::PseudoJet& j12,
 	      const std::vector<int>& candidates,
 	      fastjet::ClusterSequence & cs,
-	      const std::vector<int>& beam_particles
+	      const std::vector<int>& beam_particles,
+	      double* boostVec
 	      );
 
 

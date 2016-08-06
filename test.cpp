@@ -40,7 +40,7 @@ int main(){
 		int isReal=0;          //! Set isReal=1 for real kinematics, 0 otherwise.
 		int nlegborn=6;
 		int st_bornorder=2;
-		double keith = MINLO_computeSudakovKeith(r.d_NI,flg_bornonly,imode,isReal,MI.d_energy,nlegborn,st_bornorder);
+		double keith = MINLO_computeSudakovKeith(r.d_NI,flg_bornonly,imode,isReal,MI.d_energy,nlegborn,st_bornorder,false);
 		cout << "Keith weight: " << keith << endl;
 		cout << "(" << r.d_NI.id<<") Keith weight/my weight: " << keith/alphaFactor << endl;
 
