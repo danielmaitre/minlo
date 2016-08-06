@@ -218,6 +218,7 @@ double getSudakovFactor(
 
 	double lastScale2=1; // don't go lower than that..
 	int additionalExternal=-1;
+	int externalToIgnore=-1;
 	const THEPLUGIN::Extras * extras =
 			dynamic_cast<const THEPLUGIN::Extras *>(cs.extras());
 
@@ -247,6 +248,7 @@ double getSudakovFactor(
     	    	      cout <<"  backward beam now:" << extras->beam_flav_backward(njetsCurrent).description() << endl;
     	    	    }
     	    	  )
+    	    	  externalToIgnore=parent1;
     	      } else if ( parent1 >=0 and parent2 >= 0) {
     	    	  double lowScale=history[i].dij;
     	    	  NAMED_DEBUG("CLUSTERING_STEPS",
@@ -541,7 +543,7 @@ double getSudakovFactor(
   	)
     // don't take initial state particles (they were already taken into account in the beam sudakovs)
 		std::vector<int> externals;
-		for (int j=2; j<nparticles;j++){externals.push_back(j);}
+		for (int j=2; j<nparticles;j++){if (j!=externalToIgnore){ externals.push_back(j);}}
 		// if the first clustering is jet clustering I need to include the result of
 		// that clustering in the external particles. Technically I should remove the parents of
 		// this node, but they will all lead to sudakovs of 1.

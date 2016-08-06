@@ -13,17 +13,17 @@ void ISRboost(fastjet::PseudoJet& bj1,fastjet::PseudoJet& bj2,
 				double* boostzVec,double *boostxyVec
 				){
 
-			  double q0=bj1.E()+bj2.E()-j1.E();
+			  double q0=bj1.E()+bj2.E();
 			  double q2=q0*q0;
-			  double keith_beta=j1.pz()/q0;
+			  double k0_rec=q0-j1.E();
+			  double keith_beta=j1.pz()/k0_rec;
 			  double krec2=j1.px()*j1.px()+j1.py()*j1.py()+j1.pz()*j1.pz();
 			  double krec=sqrt(krec2);
-			  double recMass2=q0*q0-krec2;
+			  double recMass2=k0_rec*k0_rec-krec2;
 				boostzVec[0]=0;boostzVec[1]=0;boostzVec[2]=keith_beta;
 
 			  double jperp=j1.perp();
-			double norm=sqrt(j1.px()*j1.px()+j1.py()*j1.py()+j1.pz()*j1.pz());
-			double Keith_norm=sqrt(recMass2+j1.perp2());
+			double Keith_norm=sqrt(recMass2+jperp*jperp);
 
 			double boostx=-j1.px()/Keith_norm;
 			double boosty=-j1.py()/Keith_norm;
@@ -66,14 +66,14 @@ void ISRboost(fastjet::PseudoJet& bj1,fastjet::PseudoJet& bj2,
 				fastjet::PseudoJet& j=const_cast<fastjet::PseudoJet&>(jc);
 				TLorentzVector bm(j.px(),j.py(),j.pz(),j.E());
 				bm.Boost(0,0,keith_beta);
-				NAMED_DEBUG("BOOST",std::cout << "Beam Jet after boost: " << bm  << std::endl; );
+				NAMED_DEBUG("BOOST",std::cout << "Beam Jet after z boost: " << bm  << std::endl; );
 			}
 
 
 
 
 			NAMED_DEBUG("BOOST",std::cout << "CMF before z boost: " << q  << std::endl; );
-			q.Boost(0,0,-keith_beta);
+			q.Boost(0,0,keith_beta);
 			NAMED_DEBUG("BOOST",std::cout << "CMF after z boost: " << q  << std::endl; );
 			q.Boost(-boostx,-boosty,0);
 			NAMED_DEBUG("BOOST",std::cout << "CMF after xy boost: " << q  << std::endl; );
