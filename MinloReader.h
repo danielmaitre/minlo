@@ -17,7 +17,8 @@ class MINLOreader : public RootFileReaderBase {
   bool nextEntry(){return readNextEntry(d_NI);}
   void addFiles(const std::vector<std::string>& fs);
   double computeSudakov(MinloInfo& MI, int weightType,double &q0,double &scaleForNLO);
-  virtual ~MINLOreader(){};
+  double computeSudakovKeith(const MinloInfo& MI,const KeithInfo& KI);
+    virtual ~MINLOreader(){};
 };
 
 

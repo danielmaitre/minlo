@@ -30,5 +30,13 @@ struct MinloInfo {
 };
 
 
+struct KeithInfo {
+  int flg_bornonly; //! Are we feeding through only Born stuff (1), or NLO (0)?
+  int imode;        //! imode=1 for Born, imode=2 for all NLO contribs
+  int nlegborn;
+  int st_bornorder;
+};
+
+
 #endif /* _H_MINLOINFO_H_ */
 

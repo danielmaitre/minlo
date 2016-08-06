@@ -15,3 +15,14 @@ void MINLOreader::addFiles(const std::vector<std::string>& fs){
 MINLOreader::MINLOreader(){
   RootFileReaderBase::init(d_NI,"t3");
 }
+
+
+double MINLOreader::computeSudakovKeith(const MinloInfo& MI,const KeithInfo& KI){
+		int isReal;
+		if ( d_NI.nparticle==(KI.nlegborn-2) ) {
+			isReal=0; //! Set isReal=1 for real kinematics, 0 otherwise.
+		} else {
+			isReal=1;          //! Set isReal=1 for real kinematics, 0 otherwise.
+		}
+		return MINLO_computeSudakovKeith(d_NI,KI.flg_bornonly,KI.imode,isReal,MI.d_energy,KI.nlegborn,KI.st_bornorder,d_hasMinlo);
+};

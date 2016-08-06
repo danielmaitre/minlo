@@ -30,7 +30,6 @@ int main(int ac,char** av){
 		("minlo.type",po::value<std::string>(),"type of contribution")
     	("keith.flg_bornonly", po::value<int>(), " Are we feeding through only Born stuff (1), or NLO (0)?")
     	("keith.imode", po::value<int>(), " imode=1 for Born, imode=2 for all NLO contribs")
-    	("keith.isReal", po::value<int>(), " Set isReal=1 for real kinematics, 0 otherwise.")
     	("keith.nlegborn", po::value<int>(), " number of legs in the born process (including initial state f.ex. W+2j -->6)")
     	("keith.st_bornorder", po::value<int>(), " power of alphas in the born process")
 
@@ -88,6 +87,8 @@ int main(int ac,char** av){
 	int weightType=1;
 
 	MinloInfo MI;
+	KeithInfo KI;
+
 	// number of jets at the beginning
 	MI.d_njetsOrig=vm["minlo.njetsOrig"].as<int>();
 	// number of jets to cluster to
@@ -108,6 +109,14 @@ int main(int ac,char** av){
 
 	MI.print(std::cout);
 
+	KI.flg_bornonly=vm["keith.flg_bornonly"].as<int>();    //! Are we feeding through only Born stuff (1), or NLO (0)?
+	KI.imode=vm["keith.imode"].as<int>();           //! imode=1 for Born, imode=2 for all NLO contribs
+	KI.nlegborn=vm["keith.nlegborn"].as<int>();           //
+	KI.st_bornorder=vm["keith.st_bornorder"].as<int>();           //
+
+
+
+
 	double worst=0.0;
 	long worstIndex=0;
 	r.setStartEntryIndex(vm["run.startEntry"].as<long>());
@@ -119,31 +128,15 @@ int main(int ac,char** av){
 		int id=r.d_NI.id;
 		int current=r.getIndexOfNextEntry()-1;
 
+		bool useMinloIDs=false;
 
-		int flg_bornonly=vm["keith.flg_bornonly"].as<int>();    //! Are we feeding through only Born stuff (1), or NLO (0)?
-		int imode=vm["keith.imode"].as<int>();           //! imode=1 for Born, imode=2 for all NLO contribs
-		int nlegborn=vm["keith.nlegborn"].as<int>();           //
-		int st_bornorder=vm["keith.st_bornorder"].as<int>();           //
-		// ignore vm["keith.isReal"].as<int>() as it doesn't know the difference
-		// between real and subtraction
-
-		bool useMinloIDs=true;
-
-		int isReal;
-		if ( r.d_NI.nparticle==(nlegborn-2) ) {
-			isReal=0; //! Set isReal=1 for real kinematics, 0 otherwise.
-		} else {
-			isReal=1;          //! Set isReal=1 for real kinematics, 0 otherwise.
-		}
-		double keith = MINLO_computeSudakovKeith(r.d_NI,flg_bornonly,imode,isReal,MI.d_energy,nlegborn,st_bornorder,useMinloIDs);
+		double keith = r.computeSudakovKeith(MI,KI);
 		if (verbose){
 			cout << "Keith weight: " << keith << endl;
 		}
 
 		double q0,scaleForNLO;
 		double alphaFactor=r.computeSudakov(MI,weightType,q0,scaleForNLO);
-
-
 
 		double ratio=keith/alphaFactor;
 		double distance=abs(1-ratio);
