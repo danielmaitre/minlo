@@ -189,7 +189,7 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 	  NAMED_DEBUG("BEAM_CLUSTERING",cout << "=== clustering round: ===" << nclus << endl;)
 	  NAMED_DEBUG("BEAM_CLUSTERING", cout << "candidates at this point: " ;copy(candidates.begin(),candidates.end(),ostream_iterator<int>(cout," ")); cout << endl)
 	  friendly = true;
-	  double minDistance=1e32;
+	  double minDistance=1e64;
 	  int parent1=-3;
 	  int parent2=-3;
 	  //at this point np is the number of jets
@@ -218,19 +218,19 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 		  double penaltyForward=1;
 		  double penaltyBackward=1;
 		  if (yjet>yCMF){
-			  penaltyBackward*=10000000;
+			  penaltyBackward*=1e15;
 				NAMED_DEBUG("PENALTY",cout << "clustering with backward jet disfavoured because of rapidity " << endl;)
 		  } else {
-			  penaltyForward*=10000000;
+			  penaltyForward*=1e15;
 				NAMED_DEBUG("PENALTY",cout << "clustering with forward jet disfavoured because of rapidity " << endl;)
 		  }
 		  if (ff.is_multiflavored() ){  // || (ff.is_flavorless() && !beam_flavour.forward.is_flavorless() )){   // it is ok to merge gluons into gluon
-			  penaltyForward*=1000000000;
+			  penaltyForward*=1e17;
 				NAMED_DEBUG("PENALTY",cout << "clustering with forward jet leads to multi-flavoured beam!" << endl;)
 		  }
 
 		  if (fb.is_multiflavored() ){ // || (fb.is_flavorless() && !beam_flavour.backward.is_flavorless())){
-			  penaltyBackward*=1000000000;
+			  penaltyBackward*=1e17;
 				NAMED_DEBUG("PENALTY",cout << "clustering with backward jet leads to multi-flavoured beam!" << endl;)
 		  } ;
 
@@ -243,11 +243,11 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 				bool newbbeamIsQuark=(newpdgbb!=0 && abs(newpdgbb)<6 );
 
 				if (!(fbeamIsQuark && newbbeamIsQuark) ){
-					penaltyBackward*=100000;
+					penaltyBackward*=1e15;
 					NAMED_DEBUG("PENALTY",cout << "clustering with backward jet would lead to bad born " << endl;)
 				}
 				if (!(bbeamIsQuark && newfbeamIsQuark) ){
-					penaltyForward*=100000;
+					penaltyForward*=1e15;
 					NAMED_DEBUG("PENALTY",cout << "clustering with forward jet would lead to bad born " << endl;)
 				}
 
@@ -278,7 +278,7 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 			  double d;
 			  FlavInfo fi= flavour_of(cs.jets()[jetIndex1])+ flavour_of(cs.jets()[index2]);
 			  if (fi.is_multiflavored()){
-				  d=1e32;
+				  d=1e64;
 			  } else {
 				  d=cs.jets()[jetIndex1].kt_distance(cs.jets()[index2]);
 			  }
@@ -301,7 +301,7 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 						penaltyMerge=1.0;
 					}
 					else if (!(fbeamIsQuark && bbeamIsQuark) ){
-						penaltyMerge*=100000;
+						penaltyMerge*=1e15;
 						NAMED_DEBUG("PENALTY",cout << "clustering jets together would lead to bad born " << endl;)
 					}
 				}
@@ -321,12 +321,12 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 		} else {
 		  	if (parent2==-1){
 		  		if (beam_index==1){
-		  			NAMED_DEBUG("CLUSTERING_DECISION",cout << "==> decided to merge jet "<< candidates[parent1] << " and forward beam" << endl;)
+		  			NAMED_DEBUG("CLUSTERING_DECISION",cout << "==> decided to merge jet "<< candidates[parent1] << " and forward beam (" << minDistance <<")"  << endl;)
 		  		} else {
-			  		NAMED_DEBUG("CLUSTERING_DECISION",cout << "==> decided to merge jet "<< candidates[parent1] << " and " << "backward beam"<< endl;)
+			  		NAMED_DEBUG("CLUSTERING_DECISION",cout << "==> decided to merge jet "<< candidates[parent1] << " and " << "backward beam (" << minDistance <<")"  << endl;)
 		  		}
 		  	} else {
-		  		NAMED_DEBUG("CLUSTERING_DECISION",cout << "==> decided to merge jet "<< candidates[parent1] << " and jet " << candidates[parent2] << endl;)
+		  		NAMED_DEBUG("CLUSTERING_DECISION",cout << "==> decided to merge jet "<< candidates[parent1] << " and jet " << candidates[parent2] << " (" << minDistance <<")"  << endl;)
 		  	}
 		}
 
