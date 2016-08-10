@@ -216,7 +216,7 @@ double getSudakovFactor(
 	      )
 	}
 
-	double lastScale2=1; // don't go lower than that..
+	double lastScale2=0; // this is a place where a minimum scale for the recombination scales could be set. If differernt from 0, we don't go lower than that value.
 	int additionalExternal=-1;
 	int externalToIgnore1=-1;
 	int externalToIgnore2=-1;
@@ -595,7 +595,7 @@ double getSudakovFactor(
 }
 
 
-double MINLOcomputeSudakov(MinloInfo& MI,NtupleInfo<MAX_NBR_PARTICLES>& Ev, int weightType,double &q0,double &scaleForNLO,bool useNewNtupleFormat) {
+double MINLOcomputeSudakov(const MinloInfo& MI,NtupleInfo<MAX_NBR_PARTICLES>& Ev,double &q0,double &scaleForNLO,bool useNewNtupleFormat) {
 
 	std::vector<fastjet::PseudoJet> input_particles;
 

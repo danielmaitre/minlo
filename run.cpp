@@ -5,6 +5,8 @@
 #include "pdf.h"
 #include "boost/program_options.hpp"
 #include "MinloReader.h"
+#include <fenv.h>
+
 using namespace std;
 
 
@@ -12,7 +14,7 @@ using namespace std;
 namespace po = boost::program_options;
 
 int main(int ac,char** av){
-
+	//feenableexcept(FE_DIVBYZERO| FE_INVALID|FE_OVERFLOW);
 	po::options_description desc;
 
 	desc.add_options()
@@ -84,7 +86,6 @@ int main(int ac,char** av){
 
 	r.addFiles(fs);
 
-	int weightType=1;
 
 	MinloInfo MI;
 	KeithInfo KI;
@@ -136,16 +137,17 @@ int main(int ac,char** av){
 		}
 
 		double q0,scaleForNLO;
-		double alphaFactor=r.computeSudakov(MI,weightType,q0,scaleForNLO);
+		double alphaFactor=r.computeSudakov(MI,q0,scaleForNLO);
 
-		double ratio=keith/alphaFactor;
+		double ratio;
+		if (keith==alphaFactor){ratio=1.0;} else {ratio=keith/alphaFactor;};  // this catches the case where both are 0
 		double distance=abs(1-ratio);
 		if (distance>worst){
 			worst=distance;
 			worstIndex=current;
 		}
 		if (verbose){
-			cout << "(Ev:" << r.d_NI.id<<" ent:"<< current<<") Keith weight/my weight: " << keith/alphaFactor << endl;
+			cout << "(Ev:" << r.d_NI.id<<" ent:"<< current<<") Keith weight/my weight: " << ratio << endl;
 		}
 	}
 	cout << "worst difference: " << worst << " at entry " << worstIndex << endl;

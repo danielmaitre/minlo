@@ -2,9 +2,10 @@
 #include "MINLOfunctions.h"
 #include <string>
 #include <vector>
+#include "pdf.h"
 
-double MINLOreader::computeSudakov(MinloInfo& MI, int weightType,double &q0,double &scaleForNLO){
-	return MINLOcomputeSudakov(MI,d_NI,weightType,q0,scaleForNLO,d_hasMinlo);
+double MINLOreader::computeSudakov(const MinloInfo& MI,double &q0,double &scaleForNLO){
+	return MINLOcomputeSudakov(MI,d_NI,q0,scaleForNLO,d_hasMinlo);
 };
 void MINLOreader::addFiles(const std::vector<std::string>& fs){
     RootFileReaderBase::addFiles(d_NI,fs);
@@ -13,7 +14,7 @@ void MINLOreader::addFiles(const std::vector<std::string>& fs){
   };
 
 MINLOreader::MINLOreader(){
-  RootFileReaderBase::init(d_NI,"t3");
+//  RootFileReaderBase::init(d_NI);
 }
 
 
@@ -26,3 +27,16 @@ double MINLOreader::computeSudakovKeith(const MinloInfo& MI,const KeithInfo& KI)
 		}
 		return MINLO_computeSudakovKeith(d_NI,KI.flg_bornonly,KI.imode,isReal,MI.d_energy,KI.nlegborn,KI.st_bornorder,d_hasMinlo);
 };
+
+std::vector<double> MINLOreader::momentum(int i) {
+    std::vector<double> p(4);
+	  p[0]=d_NI.E[i];
+    p[1]=d_NI.px[i];
+    p[2]=d_NI.py[i];
+    p[3]=d_NI.pz[i];
+    return p;
+}
+
+void MINLOreader::initPDF(const std::string& pdfName){
+	currentPDF::init(pdfName,0);
+}

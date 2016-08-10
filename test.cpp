@@ -17,7 +17,6 @@ int main(){
 
 	r.addFiles(fs);
 
-	int weightType=1;
 
 	MinloInfo MI;
 	// number of jets at the beginning
@@ -31,7 +30,7 @@ int main(){
 		int id=r.d_NI.id;
 
 		double q0,scaleForNLO;
-		double alphaFactor=MINLOcomputeSudakov(MI,r.d_NI,weightType,q0,scaleForNLO,false);
+		double alphaFactor=MINLOcomputeSudakov(MI,r.d_NI,q0,scaleForNLO,false);
 
 
 		

@@ -16,9 +16,11 @@ class MINLOreader : public RootFileReaderBase {
   MINLOreader() ;
   bool nextEntry(){return readNextEntry(d_NI);}
   void addFiles(const std::vector<std::string>& fs);
-  double computeSudakov(MinloInfo& MI, int weightType,double &q0,double &scaleForNLO);
+  double computeSudakov(const MinloInfo& MI,double &q0,double &scaleForNLO);
   double computeSudakovKeith(const MinloInfo& MI,const KeithInfo& KI);
-    virtual ~MINLOreader(){};
+  std::vector<double> momentum(int i);
+  void initPDF(const std::string& pdfName);
+  virtual ~MINLOreader(){};
 };
 
 

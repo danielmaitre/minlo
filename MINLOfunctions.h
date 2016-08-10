@@ -44,7 +44,7 @@ std::ostream & operator<<(std::ostream& ostr, const fastjet::PseudoJet & j) ;
 typedef fastjet::MyFlavKtPlugin THEPLUGIN;
 
 
-double MINLOcomputeSudakov(MinloInfo& MI,NtupleInfo<MAX_NBR_PARTICLES>& Ev, int weightType,double &q0,double &scaleForNLO,bool useNewNtupleFormat);
+double MINLOcomputeSudakov(const MinloInfo& MI,NtupleInfo<MAX_NBR_PARTICLES>& Ev,double &q0,double &scaleForNLO,bool useNewNtupleFormat);
 void fillJetVector(NtupleInfo<MAX_NBR_PARTICLES>& Ev,std::vector<fastjet::PseudoJet>& particles,int* flavors,bool useFlavor);
 NtupleInfo<MAX_NBR_PARTICLES> boostedToCMF(NtupleInfo<MAX_NBR_PARTICLES>& orig);
 double getBeamEnergy(NtupleInfo<MAX_NBR_PARTICLES>& Ev);
