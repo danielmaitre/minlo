@@ -64,10 +64,12 @@ AC_ARG_WITH([nTupleReader-path], [AS_HELP_STRING([--with-nTupleReader-path],
 
 AS_IF([test "x$use_ntuplereader_path" == xyes],
           [AC_SUBST([NTUPLEREADER_CXXFLAGS], ["`$with_nTupleReader_path/bin/nTupleReader-config --cxxflags`"])
+           AC_SUBST([NTUPLEREADER_CPPFLAGS], ["`$with_nTupleReader_path/bin/nTupleReader-config --cppflags`"])
 	   AC_SUBST([NTUPLEREADER_LDFLAGS], ["`$with_nTupleReader_path/bin/nTupleReader-config --libs`"])
 	   AC_SUBST([NTUPLEREADER_LIBS], ["`$with_nTupleReader_path/bin/nTupleReader-config --libs`"])
 	  ],
           [AC_SUBST([NTUPLEREADER_CXXFLAGS], [`nTupleReader-config --cxxflags`])
+	   AC_SUBST([NTUPLEREADER_CPPFLAGS], [`nTupleReader-config --cppflags`])
 	   AC_SUBST([NTUPLEREADER_LDFLAGS], ["`nTupleReader-config --libs`"])
 	   AC_SUBST([NTUPLEREADER_LIBS], ["`nTupleReader-config --libs`"])
 ])
@@ -124,11 +126,13 @@ AC_ARG_WITH([root-path], [AS_HELP_STRING([--with-root-path],
 
 AS_IF([test "x$with_root_path" != xyes],
           [AC_SUBST([ROOT_CXXFLAGS], ["`$with_root_path/bin/root-config --cflags`"])
+           AC_SUBST([ROOT_CPPFLAGS], ["-I`$with_root_path/bin/root-config --incdir`"])
 	   AC_SUBST([ROOT_LDFLAGS], ["`$with_root_path/bin/root-config --libs`"])
 	   AC_SUBST([ROOTCINT], ["`$with_root_path/bin/root-config --prefix`/bin/rootcint"])
 	   ROOTINCDIR=`$with_root_path/bin/root-config --incdir`
 	  ],
           [AC_SUBST([ROOT_CXXFLAGS], [`root-config --cflags`])
+	   AC_SUBST([ROOT_CPPFLAGS], [-I`root-config --incdir`])
 	   AC_SUBST([ROOT_LDFLAGS], ["`root-config --ldflags`"])
 	   AC_SUBST([ROOT_LIBS], ["`root-config --libs`"])
 	   AC_SUBST([ROOTCINT], ["`root-config --prefix`/bin/rootcint"])
@@ -171,6 +175,12 @@ else
     AM_CPPFLAGS="$AM_CPPFLAGS  "
     echo "Not using debugging"
 fi
+
+
+
+m4_include([m4Macros/m4_ax_python.m4])
+AX_PYTHON
+
 
 AC_SUBST([AM_CPPFLAGS])
 

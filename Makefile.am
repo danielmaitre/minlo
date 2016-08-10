@@ -41,11 +41,53 @@ run_LDFLAGS = $(NTUPLEREADER_LDFLAGS) $(FASTJET_CXXFLAGS) $(LHAPDF_CXXFLAGS) $(B
 run_LDFLAGS += $(ROOT_LIBS)
 run_LDADD = libMINLOlib.la MyFlavKtPlugin/libMyCluster.la  $(FASTJET_LDFLAGS)
 
+
+
+AM_CPPFLAGS += $(PYTHON_INCLUDE) -I$(PYTHON_INCLUDE_DIR) $(NTUPLEREADER_CPPFLAGS) $(ROOT_CPPFLAGS)
+
+lib_LTLIBRARIES+=libPyMinlo.la
+
+libPyMinlo_la_SOURCES =  MinloInterface.cpp
+libPyMinlo_la_LDFLAGS = $(NTUPLEREADER_LDFLAGS) $(FASTJET_CXXFLAGS) $(LHAPDF_CXXFLAGS) $(BOOST_LDFLAGS)
+libPyMinlo_la_LDFLAGS += $(ROOT_LIBS)
+libPyMinlo_la_LIBADD = libMINLOlib.la MyFlavKtPlugin/libMyCluster.la  $(FASTJET_LDFLAGS)
+
+MinloInterface.d:	Minlo.i
+	swig $(AM_CPPFLAGS) -M -Wall -python -c++ -o MinloInterface.cpp $(srcdir)/Minlo.i
+
+@am__include@ ./MinloInterface.d
+
+
+MinloInterface.cpp:	Minlo.i
+	swig $(AM_CPPFLAGS) -Wall -python -c++ -o MinloInterface.cpp $(srcdir)/Minlo.i
+
+CLEANFILES = MinloInterface.cpp
+
+
+
+
 LIBS += $(BOOST_PROGRAM_OPTIONS_LIB)
+
+
+
 
 bin_SCRIPTS=MINLOlib-config
 
 pkginclude_HEADERS = MINLOfunctions.h
 
+uninstall-hook:
+	rm -f  $(DESTDIR)$(libdir)/_MinloReader.so
+	if test -f  $(DESTDIR)$(libdir)/MinloReader.py; then rm -f $(DESTDIR)$(libdir)/MinloReader.py; fi
+
+
+
+install-exec-hook:
+	ls -l ${prefix}/lib
+	ln -fs $(DESTDIR)$(libdir)/libPyMinlo.so $(DESTDIR)$(libdir)/_MINLOReader.so
+	if test -f $(top_builddir)/MINLOReader.py; then \
+	cp $(top_builddir)/MINLOReader.py $(DESTDIR)$(libdir); \
+	else \
+	cp $(srcdir)/MinloReader.py $(DESTDIR)$(libdir)	;	\
+	fi
 
 
