@@ -1134,34 +1134,56 @@ C ---------------------------------------------- C
       logical  i_validflav
       integer  lflav(20)
       integer  ixx
+      integer  init_n_quarks,init_n_antiquarks
+      integer  final_n_quarks,final_n_antiquarks
+      integer  init_baryon_no,final_baryon_no
       integer  el_charge_in,el_charge_out
-      integer  n_quarks,n_antiquarks
+      integer  T3,Q
       
       i_validflav = .true.
 
-      el_charge_in  = 0
-      el_charge_out = 0
-
-C - 03/08/16 - KH fix/hack for W/Z+jets
-C - Count the number of quarks+antiquarks in the event and if this
-C - number is zero (as in e.g. gg->Z) then set i_validflav=.false.
-C - and return so that the clustering is rejected on account of the
-C - current underlying Born being invalid.
-      n_quarks = 0
-      n_antiquarks = 0
-      do ixx=1,20
+C - If at any point the clustering returns a process whose flavour is not
+C - consistent with baryon number conservation, "reject" the clustering.
+      init_n_quarks  = 0 ; init_n_antiquarks  = 0
+      final_n_quarks = 0 ; final_n_antiquarks = 0
+      do ixx=1,2
          if(lflav(ixx).ge.1.and.lflav(ixx).le.6) then
-            n_quarks = n_quarks+1
+            init_n_quarks = init_n_quarks+1
          endif
          if(lflav(ixx).ge.-6.and.lflav(ixx).le.-1) then
-            n_antiquarks = n_antiquarks+1
+            init_n_antiquarks = init_n_antiquarks+1
          endif
       enddo
-      if((n_quarks+n_antiquarks).eq.0) then
+      do ixx=3,20
+         if(lflav(ixx).ge.1.and.lflav(ixx).le.6) then
+            final_n_quarks = final_n_quarks+1
+         endif
+         if(lflav(ixx).ge.-6.and.lflav(ixx).le.-1) then
+            final_n_antiquarks = final_n_antiquarks+1
+         endif
+      enddo
+      init_baryon_no  = init_n_quarks-init_n_antiquarks
+      final_baryon_no = final_n_quarks-final_n_antiquarks
+      if(init_baryon_no.ne.final_baryon_no) then
          i_validflav = .false.
          return
       endif
 
+C - *** Process dependent rejection for W/Z+jets only ***
+C - If a clustering leads to an event with only (any number of)
+C - gluons and the W/Z "reject" the clustering: the W/Z must
+C - have a quark line to couple to and you can't make any
+C - quarks by 2->1 clusterings if you only have gluons to
+C - cluster.   
+      if((init_n_quarks +init_n_antiquarks
+     $   +final_n_quarks+final_n_antiquarks).eq.0) then
+         i_validflav = .false.
+         return
+      endif
+
+C - If at any point the clustering returns a process whose flavour is not
+C - consistent with electric charge conservation, "reject" the clustering.
+      el_charge_in  = 0 ; el_charge_out = 0
       do ixx=1,20
          if(abs(lflav(ixx)).ge.1.and.abs(lflav(ixx)).le.6) then
             if(ixx.le.2) then
@@ -1191,15 +1213,6 @@ C - current underlying Born being invalid.
       enddo
 
       if(el_charge_in.ne.el_charge_out) then
-         i_validflav = .false.
-         return
-      endif
-
-      if(lflav(1).eq.0.and.lflav(2).eq.0.and.
-     $   lflav( 5).eq.1000000.and.lflav( 6).eq.1000000.and.
-     $   lflav( 7).eq.1000000.and.lflav( 8).eq.1000000.and.
-     $   lflav( 9).eq.1000000.and.lflav(10).eq.1000000.and.
-     $   lflav(11).eq.1000000.and.lflav(12).eq.1000000) then
          i_validflav = .false.
          return
       endif
