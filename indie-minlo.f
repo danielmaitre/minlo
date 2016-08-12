@@ -274,7 +274,11 @@ c$$$         endif
      $                                jmerge,kmerge,mergedfl,q2merge)
          if(q2merge.lt.1d10) then
 c     perform the merging
-            if(q2merge.gt.q2mergeMAX) q2mergeMAX=q2merge
+	    if(q2merge.gt.q2mergeMAX) then
+    	       q2mergeMAX=q2merge
+            else
+               q2merge=q2mergeMAX
+            endif
             lscalej=scales(jmerge)
             lscalek=scales(kmerge)
             scales(jmerge)=q2merge

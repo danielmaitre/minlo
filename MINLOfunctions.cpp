@@ -37,7 +37,7 @@ const double fixedScaleForNLO=80.419;
 // this is to make sure scales are raising all the way
 // not just at the last step
 // false is the behaviour of indie-minlo
-bool raisingAllTheWay=false;
+bool raisingAllTheWay=true;
 // if set to true then the local scale cannot be smaller than the largest clustering scale
 bool raisingScales=true;
 bool useKeithAlphas=true;
