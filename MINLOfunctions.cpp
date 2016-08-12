@@ -304,6 +304,10 @@ double getSudakovFactor(
 			if (raisingAllTheWay){
 				nextScale2=lastScale2;
 				NAMED_DEBUG("CLUSTERING_STEPS",cout << " keep last scale (raisingAllTheWay=true)" << endl;)
+				// update the clustering scale, need to be naughty and const_cast ...
+				const fastjet::ClusterSequence::history_element& cref=cs.history()[historyIndex];
+				fastjet::ClusterSequence::history_element& ref=const_cast<fastjet::ClusterSequence::history_element&>(cref);
+				ref.dij=lastScale2;
 			} else {
 				lastScale2=nextScale2;
 				NAMED_DEBUG("CLUSTERING_STEPS",cout << " didn't keep last scale (raisingAllTheWay=false)" << endl;)
