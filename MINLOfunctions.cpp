@@ -484,7 +484,7 @@ double getSudakovFactor(
 		if (sc.historyIndex>=historyIndex){  // that is the sudakov connects to a point in the history further that we stopped!
 			highScale=Qlocal2;
 		} else {
-			highScale=sc.highScale;
+			highScale=history[sc.historyIndex].dij ;  // can't use sc.highScale because I might have changed the scale of the node in "raisingAllTheWay" mode
 		}
 		computeSudakov(highScale,sc.lowScale,q02,sc.flavor,sudakov,bornSub);
     factor*=sudakov;
