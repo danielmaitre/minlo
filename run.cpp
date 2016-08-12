@@ -6,7 +6,7 @@
 #include "boost/program_options.hpp"
 #include "MinloReader.h"
 #include <fenv.h>
-
+#include "ntuplereader/nTupleReader_impl.h"
 using namespace std;
 
 
@@ -120,14 +120,14 @@ int main(int ac,char** av){
 
 	double worst=0.0;
 	long worstIndex=0;
-	r.setStartEntryIndex(vm["run.startEntry"].as<long>());
+	r.get_impl()->setStartEntryIndex(vm["run.startEntry"].as<long>());
 	long end=vm["run.endEntry"].as<long>();
 	if (end!=0){
-		r.setEndEntryIndex(end);
+		r.get_impl()->setEndEntryIndex(end);
 	}
 	while(r.nextEntry()){
-		int id=r.d_NI.id;
-		int current=r.getIndexOfNextEntry()-1;
+		int id=r.getID();
+		int current=r.get_impl()->getIndexOfNextEntry()-1;
 
 		bool useMinloIDs=false;
 
@@ -147,7 +147,7 @@ int main(int ac,char** av){
 			worstIndex=current;
 		}
 		if (verbose){
-			cout << "(Ev:" << r.d_NI.id<<" ent:"<< current<<") Keith weight/my weight: " << ratio << endl;
+			cout << "(Ev:" << r.getID()<<" ent:"<< current<<") Keith weight/my weight: " << ratio << endl;
 		}
 	}
 	cout << "worst difference: " << worst << " at entry " << worstIndex << endl;

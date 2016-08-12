@@ -9,20 +9,19 @@
 #include "MinloInfo.h"
 
 
-class MINLOreader : public RootFileReaderBase {
+class MINLOreader : public nTupleReader {
   bool d_hasMinlo;
+  bool d_useDouble;
+  const NtupleInfo<MAX_NBR_PARTICLES>& d_NI;
   public:
-  NtupleInfo<MAX_NBR_PARTICLES> d_NI;
   MINLOreader() ;
-  bool nextEntry(){return readNextEntry(d_NI);}
-  void addFiles(const std::vector<std::string>& fs);
   double computeSudakov(const MinloInfo& MI,double &q0,double &scaleForNLO);
   double computeSudakovKeith(const MinloInfo& MI,const KeithInfo& KI);
   std::vector<double> momentum(int i);
   void initPDF(const std::string& pdfName);
+  virtual void addFiles(const std::vector<std::string>& fs);
   virtual ~MINLOreader(){};
 };
-
 
 #endif /* MINLOREADER_H_*/
 

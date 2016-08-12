@@ -44,14 +44,14 @@ std::ostream & operator<<(std::ostream& ostr, const fastjet::PseudoJet & j) ;
 typedef fastjet::MyFlavKtPlugin THEPLUGIN;
 
 
-double MINLOcomputeSudakov(const MinloInfo& MI,NtupleInfo<MAX_NBR_PARTICLES>& Ev,double &q0,double &scaleForNLO,bool useNewNtupleFormat);
-void fillJetVector(NtupleInfo<MAX_NBR_PARTICLES>& Ev,std::vector<fastjet::PseudoJet>& particles,int* flavors,bool useFlavor);
-NtupleInfo<MAX_NBR_PARTICLES> boostedToCMF(NtupleInfo<MAX_NBR_PARTICLES>& orig);
-double getBeamEnergy(NtupleInfo<MAX_NBR_PARTICLES>& Ev);
+double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLES>& Ev,double &q0,double &scaleForNLO,bool useNewNtupleFormat,bool useDouble);
+void fillJetVector(NtupleInfo<MAX_NBR_PARTICLES>& Ev,std::vector<fastjet::PseudoJet>& particles,const int* flavors,bool useFlavor,bool useDouble);
+NtupleInfo<MAX_NBR_PARTICLES> boostedToCMF(const NtupleInfo<MAX_NBR_PARTICLES>& orig,bool useDouble);
+double getBeamEnergy(const NtupleInfo<MAX_NBR_PARTICLES>& Ev,bool useDouble);
 void printEventInclView(fastjet::ClusterSequence& cs,double ptCut);
 void printEventExclView(int n_excl,fastjet::ClusterSequence& cs);
 void printFlavourPart(const std::vector<fastjet::PseudoJet>& input_particles);
-double MINLO_computeSudakovKeith(NtupleInfo<MAX_NBR_PARTICLES>& Ev,int flg_bornonly,int imode,int isReal,double beamEnergy,int nlegborn,int st_bornorder,bool useMinloIDs);
-double getMINLOweight(MinloInfo& MI,NtupleInfo<MAX_NBR_PARTICLES>& Ev,int weightType);
+double MINLO_computeSudakovKeith(const NtupleInfo<MAX_NBR_PARTICLES>& Ev,int flg_bornonly,int imode,int isReal,double beamEnergy,int nlegborn,int st_bornorder,bool useMinloIDs,bool useDouble);
+double getMINLOweight(MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLES>& Ev,int weightType);
 
 #endif /* MINLOFUNCTIONS_H_ */

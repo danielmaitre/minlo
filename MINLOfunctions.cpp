@@ -117,17 +117,20 @@ double getAlphasQ2(double Q2){
 //this assumes that the first two particles are leptons and not partons to be clustered.
 // it should be made more flexible/smart
 
-void fillJetVector(NtupleInfo<MAX_NBR_PARTICLES>& Ev,std::vector<fastjet::PseudoJet>& particles,int* flavors,bool useFlavor){
+void fillJetVector(NtupleInfo<MAX_NBR_PARTICLES>& Ev,std::vector<fastjet::PseudoJet>& particles,const int* flavors,bool useFlavor,bool useDouble){
 	for (int p=2;p<Ev.nparticle;p++){
-		fastjet::PseudoJet j( Ev.px[p],Ev.py[p],Ev.pz[p],Ev.E[p] );
+		if (useDouble){
+			particles.push_back(fastjet::PseudoJet( Ev.pxD[p],Ev.pyD[p],Ev.pzD[p],Ev.ED[p] ));
+		} else {
+			particles.push_back(fastjet::PseudoJet( Ev.px[p],Ev.py[p],Ev.pz[p],Ev.E[p] ));
+		}
 		if (!useFlavor){
-			j.set_user_index(flavors[p]);
+			particles.back().set_user_index(flavors[p]);
 		} else {
 			#if defined(flavorPlugin) or defined(myflavorPlugin)
-					j.set_user_info(new fastjet::FlavInfo(flavors[p]));
+					particles.back().set_user_info(new fastjet::FlavInfo(flavors[p]));
 			#endif
 		}
-		particles.push_back(j);
 	}
 }
 
@@ -595,12 +598,12 @@ double getSudakovFactor(
 }
 
 
-double MINLOcomputeSudakov(const MinloInfo& MI,NtupleInfo<MAX_NBR_PARTICLES>& Ev,double &q0,double &scaleForNLO,bool useNewNtupleFormat) {
+double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLES>& Ev,double &q0,double &scaleForNLO,bool useNewNtupleFormat,bool useDouble) {
 
 	std::vector<fastjet::PseudoJet> input_particles;
 
-	NtupleInfo<MAX_NBR_PARTICLES> evb=boostedToCMF(Ev);
-	NAMED_DEBUG("BOOST", std::cout << "Reconstructed beam energy:" << getBeamEnergy(evb) << std::endl; )
+	NtupleInfo<MAX_NBR_PARTICLES> evb=boostedToCMF(Ev,useDouble);
+	NAMED_DEBUG("BOOST", std::cout << "Reconstructed beam energy:" << getBeamEnergy(evb,useDouble) << std::endl; )
 
 	fastjet::PseudoJet beam1(0, 0, +MI.d_energy*evb.x1, MI.d_energy*evb.x1);
 	fastjet::PseudoJet beam2(0, 0, -MI.d_energy*evb.x2, MI.d_energy*evb.x2);
@@ -623,7 +626,7 @@ double MINLOcomputeSudakov(const MinloInfo& MI,NtupleInfo<MAX_NBR_PARTICLES>& Ev
 	input_particles.push_back(beam2);
 
 
-	fillJetVector(evb, input_particles,&Ev.kf[0], true);
+	fillJetVector(evb, input_particles,&Ev.kf[0], true,useDouble);
 
 
 	NAMED_DEBUG("FLAVOUR_PART", printFlavourPart(input_particles);)
@@ -666,21 +669,38 @@ double MINLOcomputeSudakov(const MinloInfo& MI,NtupleInfo<MAX_NBR_PARTICLES>& Ev
 	}
 	// needs to be more flexible this will only work for V+jets
 	// need to use the boosted momenta!
-	basicProcess+=TLorentzVector(
+	if (useDouble){
+		basicProcess+=TLorentzVector(
+			evb.pxD[0],
+			evb.pyD[0],
+			evb.pzD[0],
+			evb.ED[0]
+			);
+			} else {
+		basicProcess+=TLorentzVector(
 			evb.px[0],
 			evb.py[0],
 			evb.pz[0],
-			evb.E[0]
-			);
+			evb.E[0]);
+			}
 	NAMED_DEBUG("CORE_PROCESS_SCALE",
 		std::cout << "core process vector after first lepton: " << basicProcess.E() <<" " << basicProcess.X() << " " << basicProcess.Y() << " " <<  basicProcess.Z() << std::endl;
 	)
-	basicProcess+=TLorentzVector(
+	if (useDouble){
+		basicProcess+=TLorentzVector(
+			evb.pxD[1],
+			evb.pyD[1],
+			evb.pzD[1],
+			evb.ED[1]
+			);
+	} else {
+		basicProcess+=TLorentzVector(
 			evb.px[1],
 			evb.py[1],
 			evb.pz[1],
 			evb.E[1]
 			);
+	}
 	NAMED_DEBUG("CORE_PROCESS_SCALE",
 		std::cout << "core process vector after second lepton: " << basicProcess.E() <<" " << basicProcess.X() << " " << basicProcess.Y() << " " <<  basicProcess.Z() << std::endl;
 	)
@@ -809,7 +829,7 @@ double MINLOcomputeSudakov(const MinloInfo& MI,NtupleInfo<MAX_NBR_PARTICLES>& Ev
 
 }
 
-NtupleInfo<MAX_NBR_PARTICLES> boostedToCMF(NtupleInfo<MAX_NBR_PARTICLES>& orig){
+NtupleInfo<MAX_NBR_PARTICLES> boostedToCMF(const NtupleInfo<MAX_NBR_PARTICLES>& orig,bool useDouble){
 	NtupleInfo<MAX_NBR_PARTICLES> evb;
 	evb.nparticle=orig.nparticle;
 
@@ -824,23 +844,39 @@ NtupleInfo<MAX_NBR_PARTICLES> boostedToCMF(NtupleInfo<MAX_NBR_PARTICLES>& orig){
 	evb.id2=orig.id2;
 	evb.id1p=orig.id1p;
 	evb.id2p=orig.id2p;
-	for (int ii=0;ii<orig.nparticle;ii++){
-		TLorentzVector boosted(orig.px[ii],orig.py[ii],orig.pz[ii],orig.E[ii]);
-		boosted.Boost(0,0,beta);
-		evb.px[ii]=boosted.X();
-		evb.py[ii]=boosted.Y();
-		evb.pz[ii]=boosted.Z();
-		evb.E[ii]=boosted.E();
-		evb.kf[ii]=orig.kf[ii];
+	if (useDouble){
+		for (int ii=0;ii<orig.nparticle;ii++){
+			TLorentzVector boosted(orig.pxD[ii],orig.pyD[ii],orig.pzD[ii],orig.ED[ii]);
+			boosted.Boost(0,0,beta);
+			evb.pxD[ii]=boosted.X();
+			evb.pyD[ii]=boosted.Y();
+			evb.pzD[ii]=boosted.Z();
+			evb.ED[ii]=boosted.E();
+			evb.kf[ii]=orig.kf[ii];
+		}
+	} else {
+		for (int ii=0;ii<orig.nparticle;ii++){
+			TLorentzVector boosted(orig.px[ii],orig.py[ii],orig.pz[ii],orig.E[ii]);
+			boosted.Boost(0,0,beta);
+			evb.px[ii]=boosted.X();
+			evb.py[ii]=boosted.Y();
+			evb.pz[ii]=boosted.Z();
+			evb.E[ii]=boosted.E();
+			evb.kf[ii]=orig.kf[ii];
+		}
 	}
 	return evb;
 };
 
 
-double getBeamEnergy(NtupleInfo<MAX_NBR_PARTICLES>& Ev){
+double getBeamEnergy(const NtupleInfo<MAX_NBR_PARTICLES>& Ev,bool useDouble){
 	TLorentzVector sum(0,0,0,0);
 	for (int ii=0;ii<Ev.nparticle;ii++){
-		sum+=TLorentzVector(Ev.px[ii],Ev.py[ii],Ev.pz[ii],Ev.E[ii]);
+		if (useDouble){
+			sum+=TLorentzVector(Ev.pxD[ii],Ev.pyD[ii],Ev.pzD[ii],Ev.ED[ii]);
+		} else {
+			sum+=TLorentzVector(Ev.px[ii],Ev.py[ii],Ev.pz[ii],Ev.E[ii]);
+		}
 	}
 	double E=sum.E();
 	double Z=sum.Z();
@@ -906,14 +942,15 @@ const int nMomenta=20;
 
 
 double MINLO_computeSudakovKeith(
-	NtupleInfo<MAX_NBR_PARTICLES>& Ev,
+	const NtupleInfo<MAX_NBR_PARTICLES>& Ev,
 	int flg_bornonly,
 	int imode,
 	int isReal,
 	double BeamEnergy,
 	int nlegborn,
 	int st_bornorder,
-	bool useMinloIDs
+	bool useMinloIDs,
+	bool useDouble
 	){
 
 	double kn_pborn[4*nMomenta];
@@ -963,24 +1000,37 @@ double MINLO_computeSudakovKeith(
 //		kn_pborn[index]=Ev.py[i];
 //		index=(nMomenta)*3+(i+2);
 //		kn_pborn[index]=Ev.pz[i];
-
-		kn_pborn[i*4+8]=Ev.E[i];
-		kn_pborn[i*4+9]=Ev.px[i];
-		kn_pborn[i*4+10]=Ev.py[i];
-		kn_pborn[i*4+11]=Ev.pz[i];
+		if (useDouble){
+			kn_pborn[i*4+8]=Ev.ED[i];
+			kn_pborn[i*4+9]=Ev.pxD[i];
+			kn_pborn[i*4+10]=Ev.pyD[i];
+			kn_pborn[i*4+11]=Ev.pzD[i];
+		} else {
+			kn_pborn[i*4+8]=Ev.E[i];
+			kn_pborn[i*4+9]=Ev.px[i];
+			kn_pborn[i*4+10]=Ev.py[i];
+			kn_pborn[i*4+11]=Ev.pz[i];
+		}
 
 
 		flav[i+2]=Ev.kf[i]%21;
 
-		TLorentzVector boosted(Ev.px[i],Ev.py[i],Ev.pz[i],Ev.E[i]);
-		boosted.Boost(0,0,beta);
-		kn_cmpborn[i*4+8]=boosted.E();
-		kn_cmpborn[i*4+9]=boosted.X();
-		kn_cmpborn[i*4+10]=boosted.Y();
-		kn_cmpborn[i*4+11]=boosted.Z();
-
+		if (useDouble){
+			TLorentzVector boosted(Ev.pxD[i],Ev.pyD[i],Ev.pzD[i],Ev.ED[i]);
+			boosted.Boost(0,0,beta);
+			kn_cmpborn[i*4+8]=boosted.E();
+			kn_cmpborn[i*4+9]=boosted.X();
+			kn_cmpborn[i*4+10]=boosted.Y();
+			kn_cmpborn[i*4+11]=boosted.Z();
+		} else {
+			TLorentzVector boosted(Ev.px[i],Ev.py[i],Ev.pz[i],Ev.E[i]);
+			boosted.Boost(0,0,beta);
+			kn_cmpborn[i*4+8]=boosted.E();
+			kn_cmpborn[i*4+9]=boosted.X();
+			kn_cmpborn[i*4+10]=boosted.Y();
+			kn_cmpborn[i*4+11]=boosted.Z();
+		}
 	}
-
     //int      nlegborn=6;      //  ! Number of final state particle in Born plus 2.
     //int      st_bornorder=2;    //! Number of powers of aS in the Born (ZJ=1, ZJJ=2)
 //    double      st_muren2=fixedScaleForNLO*fixedScaleForNLO;       //! The mu_R^2 value that was used to evaluate virt
