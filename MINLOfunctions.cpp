@@ -37,7 +37,7 @@ const double fixedScaleForNLO=80.419;
 // this is to make sure scales are raising all the way
 // not just at the last step
 // false is the behaviour of indie-minlo
-bool raisingAllTheWay=true;
+bool raisingAllTheWay=false;
 // if set to true then the local scale cannot be smaller than the largest clustering scale
 bool raisingScales=true;
 bool useKeithAlphas=true;
@@ -304,10 +304,6 @@ double getSudakovFactor(
 			if (raisingAllTheWay){
 				nextScale2=lastScale2;
 				NAMED_DEBUG("CLUSTERING_STEPS",cout << " keep last scale (raisingAllTheWay=true)" << endl;)
-				// update the clustering scale, need to be naughty and const_cast ...
-				const fastjet::ClusterSequence::history_element& cref=cs.history()[historyIndex];
-				fastjet::ClusterSequence::history_element& ref=const_cast<fastjet::ClusterSequence::history_element&>(cref);
-				ref.dij=lastScale2;
 			} else {
 				lastScale2=nextScale2;
 				NAMED_DEBUG("CLUSTERING_STEPS",cout << " didn't keep last scale (raisingAllTheWay=false)" << endl;)
@@ -484,7 +480,7 @@ double getSudakovFactor(
 		if (sc.historyIndex>=historyIndex){  // that is the sudakov connects to a point in the history further that we stopped!
 			highScale=Qlocal2;
 		} else {
-			highScale=history[sc.historyIndex].dij ;  // can't use sc.highScale because I might have changed the scale of the node in "raisingAllTheWay" mode
+			highScale=sc.highScale;
 		}
 		computeSudakov(highScale,sc.lowScale,q02,sc.flavor,sudakov,bornSub);
     factor*=sudakov;
