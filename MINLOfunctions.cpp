@@ -37,7 +37,7 @@ const double fixedScaleForNLO=80.419;
 // this is to make sure scales are raising all the way
 // not just at the last step
 // false is the behaviour of indie-minlo
-bool raisingAllTheWay=false;
+//bool raisingAllTheWay=true;
 // if set to true then the local scale cannot be smaller than the largest clustering scale
 bool raisingScales=true;
 bool useKeithAlphas=true;
@@ -177,7 +177,8 @@ double getSudakovFactor(
 		double scaleIfFailed,
 		double &bornSubtraction,
 		const TLorentzVector& basicProcess4Vector,
-		bool isReal=false){
+		bool isReal=false,
+		bool raisingAllTheWay=false){
 
 	NAMED_DEBUG("DISPLAY_CS",displayClusterHistory(cs));
 
@@ -738,7 +739,7 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 	vector<double> scales;
 	double subtraction;
 	double Qlocal; // the scale of the core process after doing the clusterings that are allowed
-	double sfactor=getSudakovFactor(cs,MI.d_njetsOrig,nclusterings,scales,Qlocal,q0,shat,subtraction,basicProcess,isReal);
+	double sfactor=getSudakovFactor(cs,MI.d_njetsOrig,nclusterings,scales,Qlocal,q0,shat,subtraction,basicProcess,isReal,MI.d_alltheway);
 	NAMED_DEBUG("SUDAKOV_FACTOR",cout << "Factor from sudakovs: " << sfactor << endl;)
 	NAMED_DEBUG("SUDAKOV_FACTOR",cout << "born subtraction: " << subtraction << endl;)
 	NAMED_DEBUG("ALPHAS_SCALES",cout << "number of clustering scales: " << scales.size();
@@ -950,7 +951,8 @@ double MINLO_computeSudakovKeith(
 	int nlegborn,
 	int st_bornorder,
 	bool useMinloIDs,
-	bool useDouble
+	bool useDouble,
+	int alltheway
 	){
 
 	double kn_pborn[4*nMomenta];
@@ -1108,10 +1110,10 @@ double MINLO_computeSudakovKeith(
 //			C - Old inputs and output
 		           basicfac,        //! Comb. of suds, subtractions & aS weights to
 		           bornfac,         //! Comb. of suds, subtractions & aS weights to
-		           nlofac          //! Comb. of suds, subtractions & aS weights to
+		           nlofac,          //! Comb. of suds, subtractions & aS weights to
 //			C - Extra factorisation scale output as it normally lives in pwhg common block
 //		           kn_pborn,        //! Born particles momenta in LAB frame
-
+                   alltheway
 
 	);
 	NAMED_DEBUG("KEITH",cout << "Keith basicfac:  " << basicfac << endl;)

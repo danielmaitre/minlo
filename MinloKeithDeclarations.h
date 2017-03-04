@@ -64,12 +64,12 @@ extern "C" {
 //			C - Old inputs and output
 			     double&      basicfac,        //! Comb. of suds, subtractions & aS weights to
 			     double&      bornfac,         //! Comb. of suds, subtractions & aS weights to
-			     double&      nlofac          //! Comb. of suds, subtractions & aS weights to
+			     double&      nlofac,          //! Comb. of suds, subtractions & aS weights to
 //			C - Extra factorisation scale output as it normally lives in pwhg common block
 //////////////// not used any more
 				 //			C - Momenta tha tare only used for debugging
 //				 			     double*      kn_pborn,        //! Born particles momenta in LAB frame
-
+int& alltheway
 	);
 
 

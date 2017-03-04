@@ -29,7 +29,7 @@ double MINLOreader::computeSudakovKeith(const MinloInfo& MI,const KeithInfo& KI)
 		} else {
 			isReal=1;          //! Set isReal=1 for real kinematics, 0 otherwise.
 		}
-		return MINLO_computeSudakovKeith(d_NI,KI.flg_bornonly,KI.imode,isReal,MI.d_energy,KI.nlegborn,KI.st_bornorder,d_hasMinlo,d_useDouble);
+		return MINLO_computeSudakovKeith(d_NI,KI.flg_bornonly,KI.imode,isReal,MI.d_energy,KI.nlegborn,KI.st_bornorder,d_hasMinlo,d_useDouble,MI.d_alltheway);
 };
 
 std::vector<double> MINLOreader::momentum(int i) {

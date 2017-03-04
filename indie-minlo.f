@@ -34,11 +34,12 @@ C - Outputs
 C - Additional output information on make-up of rescfac for debugging
      $      basicfac,        ! Comb. of suds & aS ratios multiplying all contribs
      $      bornfac,         ! Comb. of subtractions to multiply Born term only by 
-     $      nlofac)          ! Multiplies only NLO terms (adjusts NLO term's aS).
+     $      nlofac,          ! Multiplies only NLO terms (adjusts NLO term's aS).
      $                       ! So, for Born terms rescfac=basicfac*bornfac
      $                       !     for NLO  terms rescfac=basicfac*nlofac
      $                       ! If flg_bornonly=1 we are considering only LO
      $                       ! so then for Born terms rescfac=basicfac only.
+     $      alltheway)       ! do raising scales all the way
 c$$$     $      indie_ub,
 c$$$     $      pout)
       implicit none
@@ -69,6 +70,7 @@ C - independent flavour structures for the born and real process.
       integer  flav(20),indie_ub(20)
       real * 8 pout(0:3,20)
       real * 8 basicfac,bornfac,nlofac
+      integer alltheway
 
 c$$$CXXXX DEBUGGING XXXXC
       if(.false.) then
@@ -97,7 +99,7 @@ c$$$CXXXX DEBUGGING XXXXC
      $     rad_charmthr2,rad_bottomthr2,st_nlight,st_lambda5MSB,
      $     st_renfact,st_facfact,
      $     st_mufact2,
-     $     basicfac,bornfac,nlofac)
+     $     basicfac,bornfac,nlofac,alltheway)
 c$$$     $     indie_ub,pout)
 
       if(imode.eq.1) then
@@ -130,7 +132,7 @@ C ---------------------------------------------------------- C
      $     rad_charmthr2,rad_bottomthr2,st_nlight,st_lambda5MSB,
      $     st_renfact,st_facfact,
      $     st_mufact2,
-     $     basicfac,bornfac,nlofac)
+     $     basicfac,bornfac,nlofac,alltheway)
 c$$$     $     indie_ub,pout)
 
       implicit none
@@ -151,6 +153,7 @@ c$$$     $     indie_ub,pout)
       external i_sudakov,i_expsudakov,i_pwhg_alphas,powheginput
       real * 8 q2mergeMAX
       integer  raisingscales
+      integer alltheway
       logical  ini
       save ini
       data ini/.true./
@@ -274,10 +277,14 @@ c$$$         endif
      $                                jmerge,kmerge,mergedfl,q2merge)
          if(q2merge.lt.1d10) then
 c     perform the merging
-	    if(q2merge.gt.q2mergeMAX) then
-    	       q2mergeMAX=q2merge
+            if (alltheway.eq.0) then
+               if(q2merge.gt.q2mergeMAX) q2mergeMAX=q2merge
             else
-               q2merge=q2mergeMAX
+	       if(q2merge.gt.q2mergeMAX) then
+    	          q2mergeMAX=q2merge
+               else
+                  q2merge=q2mergeMAX
+               endif
             endif
             lscalej=scales(jmerge)
             lscalek=scales(kmerge)

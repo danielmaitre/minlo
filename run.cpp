@@ -34,6 +34,7 @@ int main(int ac,char** av){
     	("keith.imode", po::value<int>(), " imode=1 for Born, imode=2 for all NLO contribs")
     	("keith.nlegborn", po::value<int>(), " number of legs in the born process (including initial state f.ex. W+2j -->6)")
     	("keith.st_bornorder", po::value<int>(), " power of alphas in the born process")
+    	("minlo.alltheway", po::value<int>(), " non-zero for the raising-all-the-way policy")
 
     	;
 
@@ -107,13 +108,13 @@ int main(int ac,char** av){
 	if ( vm["minlo.type"].as<std::string>() == "bornLO"){
 		MI.d_type=MinloInfo::bornLO;
 	}
-
+	MI.d_alltheway=vm["minlo.alltheway"].as<int>();
 	MI.print(std::cout);
 
 	KI.flg_bornonly=vm["keith.flg_bornonly"].as<int>();    //! Are we feeding through only Born stuff (1), or NLO (0)?
 	KI.imode=vm["keith.imode"].as<int>();           //! imode=1 for Born, imode=2 for all NLO contribs
 	KI.nlegborn=vm["keith.nlegborn"].as<int>();           //
-	KI.st_bornorder=vm["keith.st_bornorder"].as<int>();           //
+	KI.st_bornorder=vm["keith.st_bornorder"].as<int>();
 
 
 

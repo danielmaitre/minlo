@@ -9,6 +9,7 @@ struct MinloInfo {
 	int d_njetsClus;
 	enum wType { born,bornLO,nlo,real};
 	wType d_type;
+	int d_alltheway;
 
   void print(std::ostream& os) {
     os << "njetsOrig  : " << d_njetsOrig << std::endl;
@@ -26,6 +27,12 @@ struct MinloInfo {
     if ( d_type == MinloInfo::real){
       os << "type  : real" << std::endl;
     }
+    os << "alltheway: " ;
+	  if (d_alltheway==0){
+		  os << "no" << std::endl;
+	  } else {
+		  os << "yes" <<std::endl;
+	  }
   }
 };
 
