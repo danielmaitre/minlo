@@ -145,7 +145,6 @@ void displayClusterHistory(fastjet::ClusterSequence& cs){
 	}
 }
 
-
 double nll_sudakov_withInfo(const  double &q20,const double &q2h,const double &q2l,const int &flav){
 	NAMED_DEBUG("SUDAKOV_ARGUMENTS",cout <<"sudakov args q0: " << sqrt(q20)  <<" qh: " << sqrt(q2h)  <<" ql: " << sqrt(q2l)  <<" flav: " << flav <<  endl;)
 	return NLL_SUDAKOV(q20,q2h,q2l,flav);
@@ -181,7 +180,7 @@ double getSudakovFactor(
 		bool raisingAllTheWay=false){
 
 	NAMED_DEBUG("DISPLAY_CS",displayClusterHistory(cs));
-
+    NAMED_DEBUG("DISPLAY_CS_DOT",displayClusterHistoryDot(cs,std::cout));
 	//double MEscale2 = Q * Q;
 
 	double factor = 1;
@@ -304,6 +303,9 @@ double getSudakovFactor(
 			NAMED_DEBUG("CLUSTERING_STEPS",	cout << " -!!! Step " << historyIndex << " has a lower scale "<< sqrt(nextScale2) << " than before "<< sqrt(lastScale2)<< endl;)
 			if (raisingAllTheWay){
 				nextScale2=lastScale2;
+				const fastjet::ClusterSequence::history_element& che=cs.history()[historyIndex];
+				fastjet::ClusterSequence::history_element& he=const_cast<fastjet::ClusterSequence::history_element&>(che);
+				he.dij=lastScale2;
 				NAMED_DEBUG("CLUSTERING_STEPS",cout << " keep last scale (raisingAllTheWay=true)" << endl;)
 			} else {
 				lastScale2=nextScale2;
@@ -404,7 +406,7 @@ double getSudakovFactor(
 					cout <<"jet gets recombined at history point: " << child << endl;
 					cout <<"jet scale of child: " <<  sqrt(highScale) << endl;
 				)
-        sudakovCandidate sc;
+        		sudakovCandidate sc;
 				sc.highScale=highScale;
 				sc.lowScale=lowScale;
 				sc.historyIndex=child;
@@ -481,7 +483,8 @@ double getSudakovFactor(
 		if (sc.historyIndex>=historyIndex){  // that is the sudakov connects to a point in the history further that we stopped!
 			highScale=Qlocal2;
 		} else {
-			highScale=sc.highScale;
+			highScale=history[sc.historyIndex].dij ;
+			//highScale=sc.highScale;
 		}
 		computeSudakov(highScale,sc.lowScale,q02,sc.flavor,sudakov,bornSub);
     factor*=sudakov;
