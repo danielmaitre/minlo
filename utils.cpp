@@ -11,6 +11,8 @@
 // 	}
 //}
 
+typedef fastjet::MyFlavKtPlugin THEPLUGIN;
+
 
 // assumes the object is either a gluon or a quark, if multiflavoured returns 0
 int pdgFromFlavor(const fastjet::FlavInfo& fi){
@@ -62,4 +64,107 @@ bool hasQuarks(const fastjet::ClusterSequence& cs,int njets){
 	)
 		return false;
 	}
+}
+
+std::string getStyle(const std::string& desc){
+				if (desc=="g (beam)"){
+					return "style=dotted";
+				} else {
+					return "style=solid";
+				};
+}
+
+
+std::string getStyle(int pdg){
+	if (pdg==21){
+		return "style=dotted";
+	} else {
+		return "style=solid";
+	};
+}
+
+std::string getStyle(const fastjet::ClusterSequence& cs,int historyIndex){
+	int pdg=pdgFromFlavor(cs.jets()[cs.history()[historyIndex].jetp_index].user_info<fastjet::FlavInfo>());
+	return getStyle(pdg);
+}
+
+
+void displayClusterHistoryDot(fastjet::ClusterSequence& cs,std::ostream& os){
+	const std::vector<fastjet::ClusterSequence::history_element> & history = 			cs.history();
+	int n = history.size();
+
+	const THEPLUGIN::Extras * extras =
+			dynamic_cast<const THEPLUGIN::Extras *>(cs.extras());
+
+	int forward=0;
+	int backward=1;
+
+	int njetsCurrent=4 ; // change for something else than Z+4j!!!!
+
+	std::vector<int> forwardNodes;
+	std::vector<int> backwardNodes;
+		os << "graph test {" << std::endl;
+
+	os << 0 <<"[style=filled]"<<std::endl;
+	os << n <<"[style=filled,color=red]"<<std::endl;
+	os << 1 <<"[style=filled]"<<std::endl;
+
+	for (int historyIndex=(n/2 + 2);historyIndex<n;historyIndex++){
+
+	    int parent1=history[historyIndex].parent1;
+	    int parent2=history[historyIndex].parent2;
+
+		int maxHist=n;
+
+	    if (parent2 == cs.BeamJet){
+	    	fastjet::PseudoJet j=cs.jets()[history[parent1].jetp_index];
+
+			if (extras->beam_it_clusters_with(j)==+1){
+				os << "// cluster with forward beam " << pdgFromFlavor(extras->beam_flav_forward(njetsCurrent))<<std::endl;
+		        os << "// forward beam before:" << extras->beam_flav_forward(njetsCurrent+1).description() << std::endl;
+			    os << "// forward beam now:" << extras->beam_flav_forward(njetsCurrent).description() << std::endl;
+				std::string beamstyle=getStyle(extras->beam_flav_forward(njetsCurrent).description());
+				std::string otherstyle=getStyle(cs,parent1);
+				os << forward << " -- " << historyIndex << " [" << beamstyle <<",weight=0.5]" << std::endl;
+				os << parent1 << " -- " << historyIndex << " ["<< otherstyle << "]"<< std::endl;
+				forward=historyIndex;
+				forwardNodes.push_back(historyIndex);
+	        } else {
+				os << "// cluster with backward beam " << pdgFromFlavor(extras->beam_flav_backward(njetsCurrent))<<std::endl;
+		        os << "// backward beam before:" << extras->beam_flav_backward(njetsCurrent+1).description() << std::endl;
+			    os << "// backward beam now:" << extras->beam_flav_backward(njetsCurrent).description() << std::endl;
+				std::string beamstyle=getStyle(pdgFromFlavor(extras->beam_flav_backward(njetsCurrent)));
+				std::string otherstyle=getStyle(cs,parent1);
+				os << historyIndex  << " -- " << backward<< " [" << beamstyle  <<",weight=0.5]"<< std::endl;
+				os << parent1 << " -- " << historyIndex << " ["<< otherstyle << "]" << std::endl;
+				backward=historyIndex;
+				backwardNodes.push_back(historyIndex);
+			}
+	    } else if ( parent1 >=0 and parent2 >= 0) {
+			os << "// jet clustered together: " << parent1 << " " << parent2<< std::endl ;
+			std::string style1=getStyle(pdgFromFlavor(cs.jets()[history[parent1].jetp_index].user_info<fastjet::FlavInfo>()));
+			std::string style2=getStyle(pdgFromFlavor(cs.jets()[history[parent2].jetp_index].user_info<fastjet::FlavInfo>()));
+    		os << parent1 << " -- " << historyIndex << " [" << style1 << "]" << std::endl;
+    		os << parent2 << " -- " << historyIndex << " [" << style2 << "]" <<  std::endl;
+    	}
+		os << historyIndex << "[ label= \""<< historyIndex<<" \\n " << cs.history()[historyIndex].dij << "\" ]" << std::endl;
+		njetsCurrent--;
+	}
+	os << "// connecting to the main process: " << std::endl ;
+
+			std::string beamstyleF=getStyle(extras->beam_flav_forward(0+1).description());
+			std::string beamstyleB=getStyle(extras->beam_flav_backward(0+1).description());
+			os << forward << " -- " << n << " [" << beamstyleF << ",weight=0.5]" << std::endl;
+			os << n << " -- " << backward << " ["<< beamstyleB << ",weight=0.5]" << std::endl;
+
+    		os << "{ rank=same; 0;";
+			for (int ii=0;ii<forwardNodes.size();ii++){
+				os << forwardNodes[ii] << ";";
+			}
+			os << n << ";";
+			for (int ii=backwardNodes.size()-1;ii>=0;ii--){
+				os << backwardNodes[ii] << ";";
+			}
+			os << "1;}  \n}" << std::endl;
+
 }
