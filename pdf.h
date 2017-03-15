@@ -1,5 +1,5 @@
-#ifndef _H_PDF_H
-#define _H_PDF_H
+#ifndef _H_MINLOPDF_H
+#define _H_MINLOPDF_H
 
 #include "LHAPDF/LHAPDF.h"
 
@@ -18,11 +18,11 @@ public:
 	static LHAPDF::PDF* s_PDF;
 	static LHAPDF::PDFSet* s_PDFSet;
 	static void init(const std::string& name, int set);
-
+	static void setCurrent(LHAPDF::PDF* pdf,LHAPDF::PDFSet* set);
 };
 
 #endif
 
 
 
-#endif /* _H_PDF_H */
+#endif /* _H_MINLOPDF_H */
