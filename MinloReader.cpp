@@ -5,8 +5,8 @@
 #include "pdf.h"
 #include "ntuplereader/nTupleReader_impl.h"
 
-double MINLOreader::computeSudakov(const MinloInfo& MI,double &q0,double &scaleForNLO){
-	return MINLOcomputeSudakov(MI,get_impl()->d_NI,q0,scaleForNLO,d_hasMinlo,d_useDouble);
+double MINLOreader::computeSudakov(const MinloInfo& MI,double &q0,double &scaleForNLO,int &status){
+	return MINLOcomputeSudakov(MI,get_impl()->d_NI,q0,scaleForNLO,status,d_hasMinlo,d_useDouble);
 };
 void MINLOreader::addFiles(const std::vector<std::string>& fs){
     nTupleReader::addFiles(fs);

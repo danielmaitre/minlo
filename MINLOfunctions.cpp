@@ -175,6 +175,7 @@ double getSudakovFactor(
 		double& q0,
 		double scaleIfFailed,
 		double &bornSubtraction,
+		int &status,
 		const TLorentzVector& basicProcess4Vector,
 		bool isReal=false,
 		bool raisingAllTheWay=false){
@@ -522,7 +523,7 @@ double getSudakovFactor(
 		for (int isc=0;isc<clusteringScales.size();isc++){
 			clusteringScales[isc]=scaleIfFailed;
 		}
-
+	  	status=-1;
 	  	bornSubtraction=0;
 		return 1;  // the sudakov
 	}
@@ -597,12 +598,13 @@ double getSudakovFactor(
   		cout << "total born sudakov subtraction " << bornSubtraction << endl;
     	cout <<"==========="<< endl;
   	)
-    return factor;
+  	status=nbrClusteringsDone;
+  	return factor;
 
 }
 
 
-double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLES>& Ev,double &q0,double &scaleForNLO,bool useNewNtupleFormat,bool useDouble) {
+double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLES>& Ev,double &q0,double &scaleForNLO,int &status,bool useNewNtupleFormat,bool useDouble) {
 
 	std::vector<fastjet::PseudoJet> input_particles;
 
@@ -742,7 +744,7 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 	vector<double> scales;
 	double subtraction;
 	double Qlocal; // the scale of the core process after doing the clusterings that are allowed
-	double sfactor=getSudakovFactor(cs,MI.d_njetsOrig,nclusterings,scales,Qlocal,q0,shat,subtraction,basicProcess,isReal,MI.d_alltheway);
+	double sfactor=getSudakovFactor(cs,MI.d_njetsOrig,nclusterings,scales,Qlocal,q0,shat,subtraction,status,basicProcess,isReal,MI.d_alltheway);
 	NAMED_DEBUG("SUDAKOV_FACTOR",cout << "Factor from sudakovs: " << sfactor << endl;)
 	NAMED_DEBUG("SUDAKOV_FACTOR",cout << "born subtraction: " << subtraction << endl;)
 	NAMED_DEBUG("ALPHAS_SCALES",cout << "number of clustering scales: " << scales.size();

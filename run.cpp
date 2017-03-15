@@ -140,7 +140,8 @@ int main(int ac,char** av){
 		}
 
 		double q0,scaleForNLO;
-		double alphaFactor=r.computeSudakov(MI,q0,scaleForNLO);
+		int status;
+		double alphaFactor=r.computeSudakov(MI,q0,scaleForNLO,status);
 
 		double ratio;
 		if (keith==alphaFactor){ratio=1.0;} else {ratio=keith/alphaFactor;};  // this catches the case where both are 0
