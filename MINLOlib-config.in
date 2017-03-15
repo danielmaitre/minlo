@@ -12,7 +12,7 @@ case $1 in
   --rpath)
     echo -Wl,-rpath,@prefix@/lib/  ;;
   --include)
-    echo -I@prefix@/include/MINLOlib   ;;
+    echo -I@prefix@/include/   ;;
   *)
     echo "MINLOlib-config : configuration script";
     echo "Options:";

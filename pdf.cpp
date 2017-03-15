@@ -14,6 +14,10 @@ void currentPDF::init(const std::string& name,int set){
   s_PDFSet=new LHAPDF::PDFSet("CT10nlo");
   s_PDF=s_PDFSet->mkPDF(set);
 }
+void currentPDF::setCurrent(LHAPDF::PDF* pdf,LHAPDF::PDFSet* set){
+  s_PDF=pdf;
+  s_PDFSet=set;
+}
 
 #endif
 

@@ -69,7 +69,7 @@ LIBS += $(BOOST_PROGRAM_OPTIONS_LIB)
 
 bin_SCRIPTS=MINLOlib-config
 
-pkginclude_HEADERS = MINLOfunctions.h
+pkginclude_HEADERS = MINLOfunctions.h MinloInfo.h pdf.h
 
 uninstall-hook:
 	rm -f  $(DESTDIR)$(libdir)/_MinloReader.so
