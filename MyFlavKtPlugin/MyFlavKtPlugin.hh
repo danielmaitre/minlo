@@ -6,7 +6,7 @@
 #include "JetIModes.h"
 #include "FlavKtPlugin.hh"
 
-FASTJET_BEGIN_NAMESPACE      // defined in fastjet/internal/base.hh
+namespace fastjet {     // defined in fastjet/internal/base.hh
 
 
 
@@ -166,6 +166,6 @@ protected:
 };
 
 
-FASTJET_END_NAMESPACE        // defined in fastjet/internal/base.hh
+}       // defined in fastjet/internal/base.hh
 #endif // __MYFLAVKTPLUGIN_HH__
 

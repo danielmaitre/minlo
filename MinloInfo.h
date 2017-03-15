@@ -10,11 +10,13 @@ struct MinloInfo {
 	enum wType { born,bornLO,nlo,real};
 	wType d_type;
 	int d_alltheway;
+	double d_R;
 
   void print(std::ostream& os) {
     os << "njetsOrig  : " << d_njetsOrig << std::endl;
     os << "njetsClus  : " << d_njetsClus << std::endl;
     os << "beam energy: " << d_energy << std::endl;
+    os << "R          : " << d_R << std::endl;
     if ( d_type == MinloInfo::born){
       os << "type  : born" << std::endl;
     }

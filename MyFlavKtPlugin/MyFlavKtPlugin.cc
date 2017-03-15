@@ -280,7 +280,7 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 			  if (fi.is_multiflavored()){
 				  d=1e64;
 			  } else {
-				  d=cs.jets()[jetIndex1].kt_distance(cs.jets()[index2]);
+				  d=cs.jets()[jetIndex1].kt_distance(cs.jets()[index2])/(_R*_R);
 			  }
 
 				double penaltyMerge=1.0;

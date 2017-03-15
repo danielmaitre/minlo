@@ -639,7 +639,7 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 
 	//int imode = ialg_pp_ktfs1_E;  // try ktf2 and ktLI to see how event changes
 	int imode = itype_pp+iangle_DeltaRs+irecom_E;
-	double R = 1.0;
+	double R = MI.d_R;
 	int nb;
 	if (isReal){
 		nb=1;

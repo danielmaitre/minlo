@@ -30,6 +30,7 @@ int main(int ac,char** av){
     	("minlo.njetsClus", po::value<int>(), "number of jets to cluster to")
     	("minlo.beamEnergy", po::value<double>(), "beam energy")
 		("minlo.type",po::value<std::string>(),"type of contribution")
+		("minlo.radius",po::value<double>()->default_value(1.0),"radius for the kt clustering")
     	("keith.flg_bornonly", po::value<int>(), " Are we feeding through only Born stuff (1), or NLO (0)?")
     	("keith.imode", po::value<int>(), " imode=1 for Born, imode=2 for all NLO contribs")
     	("keith.nlegborn", po::value<int>(), " number of legs in the born process (including initial state f.ex. W+2j -->6)")
@@ -108,6 +109,7 @@ int main(int ac,char** av){
 	if ( vm["minlo.type"].as<std::string>() == "bornLO"){
 		MI.d_type=MinloInfo::bornLO;
 	}
+	MI.d_R=vm["minlo.radius"].as<double>();
 	MI.d_alltheway=vm["minlo.alltheway"].as<int>();
 	MI.print(std::cout);
 
