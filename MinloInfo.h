@@ -11,6 +11,7 @@ struct MinloInfo {
 	wType d_type;
 	int d_alltheway;
 	double d_R;
+	bool d_useHT2;
 
   void print(std::ostream& os) {
     os << "njetsOrig  : " << d_njetsOrig << std::endl;

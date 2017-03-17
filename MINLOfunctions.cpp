@@ -178,7 +178,7 @@ double getSudakovFactor(
 		int &status,
 		const TLorentzVector& basicProcess4Vector,
 		bool isReal=false,
-		bool raisingAllTheWay=false){
+		bool raisingAllTheWay=false,bool useHT2=false){
 
 	NAMED_DEBUG("DISPLAY_CS",displayClusterHistory(cs));
     NAMED_DEBUG("DISPLAY_CS_DOT",displayClusterHistoryDot(cs,std::cout));
@@ -429,18 +429,34 @@ double getSudakovFactor(
 	)
 
 	std::vector<fastjet::PseudoJet> jetsLeft=cs.exclusive_jets(njetsStart-nbrClusteringsDone);
-	TLorentzVector coreProcess(basicProcess4Vector);
-	for (int ij=0;ij<jetsLeft.size();ij++){
-		fastjet::PseudoJet& j = jetsLeft[ij];
-		NAMED_DEBUG("CORE_PROCESS_SCALE",
-			std::cout << "core process vector so far: " << coreProcess.E() <<" " << coreProcess.X() << " " << coreProcess.Y() << " " <<  coreProcess.Z() << std::endl;
-			std::cout << "now adding jet " << j.E() <<" " << j.px() << " " << j.py() << " " <<  j.pz() << std::endl;
-			std::cout << "core process scale so far: " << coreProcess.M() << std::endl;);
-			coreProcess+=TLorentzVector(j.px(),j.py(),j.pz(),j.E());
-	}
-	NAMED_DEBUG("CORE_PROCESS_SCALE", std::cout << "final core process scale: " << coreProcess.M() << " Q^2: "<< coreProcess.M() *coreProcess.M() <<std::endl;);
 
-	Qlocal=coreProcess.M();
+	if (useHT2){
+		double ht=sqrt(basicProcess4Vector.Perp2()+80.419*80.419);
+		for (int ij=0;ij<jetsLeft.size();ij++){
+			fastjet::PseudoJet& j = jetsLeft[ij];
+			NAMED_DEBUG("CORE_PROCESS_SCALE",
+				std::cout << "now adding jet pt " << j.pt() << std::endl;
+				std::cout << "ht so far: " << ht << std::endl;);
+				ht+=j.pt();
+		}
+		NAMED_DEBUG("CORE_PROCESS_SCALE", std::cout << "final core process scale (ht/2): " << ht/2 << " Q^2: "<< ht*ht/4 <<std::endl;);
+		Qlocal=ht/2;
+	} else {
+		TLorentzVector coreProcess(basicProcess4Vector);
+		for (int ij=0;ij<jetsLeft.size();ij++){
+			fastjet::PseudoJet& j = jetsLeft[ij];
+			NAMED_DEBUG("CORE_PROCESS_SCALE",
+					std::cout << "core process vector so far: " << coreProcess.E() <<" " << coreProcess.X() << " " << coreProcess.Y() << " " <<  coreProcess.Z() << std::endl;
+				std::cout << "now adding jet " << j.E() <<" " << j.px() << " " << j.py() << " " <<  j.pz() << std::endl;
+				std::cout << "core process scale so far: " << coreProcess.M() << std::endl;);
+				coreProcess+=TLorentzVector(j.px(),j.py(),j.pz(),j.E());
+		}
+		NAMED_DEBUG("CORE_PROCESS_SCALE", std::cout << "final core process scale: " << coreProcess.M() << " Q^2: "<< coreProcess.M() *coreProcess.M() <<std::endl;);
+		Qlocal=coreProcess.M();
+	}
+
+
+
 	double Qlocal2=Qlocal*Qlocal;
 
 	if (raisingScales){
@@ -525,6 +541,7 @@ double getSudakovFactor(
 		}
 	  	status=-1;
 	  	bornSubtraction=0;
+		minloImpl::g_nclusterings=-1;
 		return 1;  // the sudakov
 	}
 
@@ -744,7 +761,7 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 	vector<double> scales;
 	double subtraction;
 	double Qlocal; // the scale of the core process after doing the clusterings that are allowed
-	double sfactor=getSudakovFactor(cs,MI.d_njetsOrig,nclusterings,scales,Qlocal,q0,shat,subtraction,status,basicProcess,isReal,MI.d_alltheway);
+	double sfactor=getSudakovFactor(cs,MI.d_njetsOrig,nclusterings,scales,Qlocal,q0,shat,subtraction,status,basicProcess,isReal,MI.d_alltheway,MI.d_useHT2);
 	NAMED_DEBUG("SUDAKOV_FACTOR",cout << "Factor from sudakovs: " << sfactor << endl;)
 	NAMED_DEBUG("SUDAKOV_FACTOR",cout << "born subtraction: " << subtraction << endl;)
 	NAMED_DEBUG("ALPHAS_SCALES",cout << "number of clustering scales: " << scales.size();
