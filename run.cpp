@@ -37,6 +37,7 @@ int main(int ac,char** av){
     	("keith.st_bornorder", po::value<int>(), " power of alphas in the born process")
     	("minlo.alltheway", po::value<int>(), " non-zero for the raising-all-the-way policy")
 		("minlo.useHT2",po::value<bool>()->default_value(false),"whether to use HT/2")
+		("minlo.useModifiedR",po::value<bool>()->default_value(false),"whether to use the modified R definition")
 
     	;
 
@@ -113,6 +114,7 @@ int main(int ac,char** av){
 	MI.d_R=vm["minlo.radius"].as<double>();
 	MI.d_alltheway=vm["minlo.alltheway"].as<int>();
 	MI.d_useHT2=vm["minlo.useHT2"].as<bool>();
+	MI.d_useModifiedR=vm["minlo.useModifiedR"].as<bool>();
 	MI.print(std::cout);
 
 	KI.flg_bornonly=vm["keith.flg_bornonly"].as<int>();    //! Are we feeding through only Born stuff (1), or NLO (0)?

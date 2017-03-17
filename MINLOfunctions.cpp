@@ -667,7 +667,7 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 	} else {
 		nb=0;
 	}
-	fastjet::JetDefinition jet_def = new fastjet::MyFlavKtPlugin(imode, R,nb);
+	fastjet::JetDefinition jet_def = new fastjet::MyFlavKtPlugin(R,MI.d_useModifiedR,nb);
 	fastjet::ClusterSequence cs(input_particles, jet_def);
 	const THEPLUGIN::Extras * extras = dynamic_cast<const THEPLUGIN::Extras *>(cs.extras());
 	NAMED_DEBUG("EVENT_INCL_VIEW", printEventInclView(cs,0.0);)

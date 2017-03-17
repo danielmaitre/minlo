@@ -10,60 +10,10 @@ namespace fastjet {     // defined in fastjet/internal/base.hh
 
 
 
-
-//======================================================================
-/// A plugin that provides a FastJet interface to the Kt family
-/// flavour f90 clustering code by Banfi, Salam and Zanderighi
-/// (Eur.Phys.J. C47 (2006) 113 [hep-ph/0601139]).
-///
-/// It provides both plain kt clustering (while tracking flavours) and
-/// flavour-kt clustering. Access to beam flavour is possible via a
-/// FlavKtPlugin::Extras class.
-///
-/// For flavour to be properly handled, the particles passed to
-/// FastJet for clustering should each have a FlavInfo object set as
-/// their user_info. Incoming beam particles should be included in the
-/// list of input particles, and their flavour should also have the
-/// "beam" attribute set.
-///
-/// If the user asks for inclusive jets, they will receive the
-/// standard set of inclusive jets, as well as the two beam particles.
-///
-/// If the user asks for exclusive jets, they may also obtain the
-/// flavour of the incoming beams at that exclusive stage of
-/// clustering via the beam_flav_forward(n) etc members of the
-/// extras. See the example for usage.
 class MyFlavKtPlugin : public JetDefinition::Plugin {
 public:
-  /// Main constructor for the FlavKt Plugin class.  It takes an "imode", which 
-  /// indicates the kind of algorithm to be used, and a radius value (which
-  /// will be ignored for e+e- algorithms). 
-  /// 
-  /// IMode values likely to be of interest include
-  ///
-  ///   - ialg_pp_ktLI_E:  standard pp longitudinally invariant kt 
-  ///   - ialg_pp_ktf1_E:  pp flavour kt with alpha=1
-  ///   - ialg_pp_ktf2_E:  pp flavour kt with alpha=2
-  ///   - ialg_pp_ktfs1_E: pp flavour kt with alpha=1 and only "safe" flavour recombinations (e.g. no u+d->ud)
-  ///   - ialg_pp_ktfs2_E: pp flavour kt with alpha=2 and only "safe" flavour recombinations (e.g. no u+d->ud)
-  ///
-  /// Consult the JetIModes.h file for the full available list of
-  /// imode values. 
-  ///
-  /// Note that with the "safe" flavour variants, the jet algorithm
-  /// may reach a stage where the only possible clustering is an
-  /// unsafe one. This is most often the case in the vicinity of the
-  /// beam remnants, e.g. proton -> neutron + pi+ -> neutron + u +
-  /// dbar, where the dbar goes into the hard reaction, while the
-  /// neutron and u go down the beampipe. There is no way of combining
-  /// the neutron and u quark to get something with just a single unit
-  /// of flavour.
-  /// 
-  /// In such cases, the algorithm will then with these unsafe
-  /// clusterings at the very end, assigning a dmerge value of
-  /// 1e100. This can lead to unexpected results if you then ask (say)
-  /// for 2 exclusive jets.
-  MyFlavKtPlugin (int imode, double R,int nb) : _imode(imode), _R(R), _nBoosts(nb) {}
+  /// based on the FlavKtPlugin
+  MyFlavKtPlugin (double R,bool useModifiedR,int nb) :  _R(R), _useModifiedR(useModifiedR), _nBoosts(nb) {}
 
   /// standard plugin call to run the clustering
   virtual void run_clustering(ClusterSequence & cs) const;
@@ -79,8 +29,8 @@ public:
   class Extras;
   
 private:
-  int    _imode;
   double _R;
+  bool _useModifiedR;
   int _nBoosts;
   static const FlavInfo _no_flav;
   static LimitedWarning _spectators_unhandled;

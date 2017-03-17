@@ -44,11 +44,21 @@ const FlavInfo MyFlavKtPlugin::_no_flav;
 //----------------------------------------------------------------------
 std::string MyFlavKtPlugin::description() const {
   ostringstream ostr;
-  ostr << "Flavour-enabled Kt family Algorithm, imode = ";
-  ostr << _imode;
+
   ostr << ", R = " << _R;
   return ostr.str();
 }
+
+double modified_kt_distance(const PseudoJet & j1,const PseudoJet & j2) {
+  double distance = min(j1.pt2(), j2.pt2());
+  double dphi = abs(j1.phi() - j2.phi());
+  if (dphi > pi) {dphi = twopi - dphi;}
+  double drap = j1.rap() - j2.rap();
+  double deltaR=2.0*(cosh(drap)-cos(dphi));
+  distance = distance * deltaR;
+  return distance;
+}
+
 
 
 //----------------------------------------------------------------------
@@ -280,7 +290,12 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 			  if (fi.is_multiflavored()){
 				  d=1e64;
 			  } else {
-				  d=cs.jets()[jetIndex1].kt_distance(cs.jets()[index2])/(_R*_R);
+				  if (_useModifiedR){
+					  d=modified_kt_distance(cs.jets()[jetIndex1],cs.jets()[index2])/(_R*_R);
+				  } else {
+					  d=cs.jets()[jetIndex1].kt_distance(cs.jets()[index2])/(_R*_R);
+				  }
+
 			  }
 
 				double penaltyMerge=1.0;

@@ -12,6 +12,7 @@ struct MinloInfo {
 	int d_alltheway;
 	double d_R;
 	bool d_useHT2;
+	bool d_useModifiedR;
 
   void print(std::ostream& os) {
     os << "njetsOrig  : " << d_njetsOrig << std::endl;
@@ -31,12 +32,19 @@ struct MinloInfo {
       os << "type  : real" << std::endl;
     }
     os << "alltheway: " ;
-	  if (d_alltheway==0){
+    if (d_alltheway==0){
+    	os << "no" << std::endl;
+	} else {
+		os << "yes" <<std::endl;
+	}
+
+	  os << "use modified R definition: " ;
+	  if (!d_useModifiedR){
 		  os << "no" << std::endl;
-	  } else {
+		  	  } else {
 		  os << "yes" <<std::endl;
-	  }
-  }
+	}
+}
 };
 
 
