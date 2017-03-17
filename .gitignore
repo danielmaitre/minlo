@@ -23,3 +23,7 @@ Sudakov.top
 */Makefile.in
 FlavKtPlugin/Makefile.in
 .buildconfig
+/MinloInterface.d
+/.cproject
+/.project
+/.autotools
