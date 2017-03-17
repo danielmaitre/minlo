@@ -17,6 +17,8 @@ libFlavKtPlugin_la_SOURCES = \
 	NameSelect.f90  \
 	FlavKtPlugin.cc
 
+pkginclude_HEADERS = FlavKtPlugin.hh 
+
 libFlavKtPlugin_la_LIBADD = $(FCLIBS)
 
 .NOTPARALLEL:

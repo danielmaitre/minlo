@@ -25,6 +25,8 @@ using namespace std;
 
 #define myflavorPlugin
 
+typedef fastjet::MyFlavKtPlugin THEPLUGIN;
+
 double minloImpl::g_MinloScale;
 double minloImpl::g_MinloFactor;
 double minloImpl::g_nclusterings;
@@ -249,7 +251,7 @@ double getSudakovFactor(
     	          	  cout <<"  forward beam before:" << extras->beam_flav_forward(njetsCurrent+1).description() << endl;
     	          	  cout <<"  forward beam now:" << extras->beam_flav_forward(njetsCurrent).description() << endl;
     	    	    } else {
-    	    	      cout <<"  backward beam before:" << extras->beam_flav_backward(njetsCurrent+1).description() << endl;
+    	    	    	typedef fastjet::MyFlavKtPlugin THEPLUGIN;  cout <<"  backward beam before:" << extras->beam_flav_backward(njetsCurrent+1).description() << endl;
     	    	      cout <<"  backward beam now:" << extras->beam_flav_backward(njetsCurrent).description() << endl;
     	    	    }
     	    	  )

@@ -10,7 +10,6 @@
 
 #include "fastjet/PseudoJet.hh"
 #include "fastjet/ClusterSequence.hh"
-#include "MyFlavKtPlugin/MyFlavKtPlugin.hh"
 #include <iomanip>
 #include "TLorentzVector.h"
 #include "MinloInfo.h"
@@ -41,7 +40,7 @@ std::ostream & operator<<(std::ostream& ostr, const sudakovCandidate & sc) ;
 std::ostream & operator<<(std::ostream& ostr, const fastjet::PseudoJet & j) ;
 
 
-typedef fastjet::MyFlavKtPlugin THEPLUGIN;
+
 
 
 double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLES>& Ev,double &q0,double &scaleForNLO,int &status,bool useNewNtupleFormat,bool useDouble);

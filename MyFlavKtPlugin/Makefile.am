@@ -12,6 +12,7 @@ libMyCluster_la_SOURCES = \
 		MyFlavKtPlugin.cc boosts.h boosts.cpp
 
 
+pkginclude_HEADERS = MyFlavKtPlugin.hh JetIModes.h
 
 libMyCluster_la_LIBS = fastjettool
 libMyCluster_la_LIBADD = $(FCLIBS) 
