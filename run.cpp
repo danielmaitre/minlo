@@ -112,7 +112,7 @@ int main(int ac,char** av){
 	}
 	MI.d_R=vm["minlo.radius"].as<double>();
 	MI.d_alltheway=vm["minlo.alltheway"].as<int>();
-	MI.d_useHT2=vm["minlo.useHT2"].as<int>();
+	MI.d_useHT2=vm["minlo.useHT2"].as<bool>();
 	MI.print(std::cout);
 
 	KI.flg_bornonly=vm["keith.flg_bornonly"].as<int>();    //! Are we feeding through only Born stuff (1), or NLO (0)?
