@@ -13,6 +13,8 @@ struct MinloInfo {
 	double d_R;
 	bool d_useHT2;
 	bool d_useModifiedR;
+	enum scaleMode { geometric,inverseAlpha};
+	scaleMode d_scaleMode;
 
   void print(std::ostream& os) {
     os << "njetsOrig  : " << d_njetsOrig << std::endl;

@@ -38,6 +38,7 @@ int main(int ac,char** av){
     	("minlo.alltheway", po::value<int>(), " non-zero for the raising-all-the-way policy")
 		("minlo.useHT2",po::value<bool>()->default_value(false),"whether to use HT/2")
 		("minlo.useModifiedR",po::value<bool>()->default_value(false),"whether to use the modified R definition")
+		("minlo.scaleMode",po::value<std::string>()->default_value("geometric"),"mode for the nlo scale, either geometric or inverseAlpha")
 
     	;
 
@@ -115,7 +116,18 @@ int main(int ac,char** av){
 	MI.d_alltheway=vm["minlo.alltheway"].as<int>();
 	MI.d_useHT2=vm["minlo.useHT2"].as<bool>();
 	MI.d_useModifiedR=vm["minlo.useModifiedR"].as<bool>();
+
+	if ( vm["minlo.scaleMode"].as<std::string>() == "geometric"){
+		MI.d_scaleMode=MinloInfo::geometric;
+	} else if ( vm["minlo.scaleMode"].as<std::string>() == "inverseAlpha"){
+		MI.d_scaleMode=MinloInfo::inverseAlpha;
+	} else {
+		cout << "wrong setting for scaleMode!" << endl;
+	}
+
 	MI.print(std::cout);
+
+
 
 	KI.flg_bornonly=vm["keith.flg_bornonly"].as<int>();    //! Are we feeding through only Born stuff (1), or NLO (0)?
 	KI.imode=vm["keith.imode"].as<int>();           //! imode=1 for Born, imode=2 for all NLO contribs

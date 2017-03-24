@@ -804,7 +804,15 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 		alphaFactor*=alphaForNLO;
 		alphaFactorNum*=alphaForNLO;
 	}
-	scaleForNLO=exp(log(scaleProduct)/double(MI.d_njetsOrig));
+	if (MI.d_scaleMode==MinloInfo::geometric){
+		scaleForNLO=exp(log(scaleProduct)/double(MI.d_njetsOrig));
+	}
+	static QofAlphasInterpolated* QoA=new QofAlphasInterpolated();
+
+	if (MI.d_scaleMode==MinloInfo::inverseAlpha){
+		double effectiveAlphasNoSudakov=exp(log(alphaFactor)/double(MI.d_njetsOrig))*oldAlpha;
+		scaleForNLO=(*QoA)(effectiveAlphasNoSudakov);
+	}
 
 	NAMED_DEBUG("ALPHAS_SCALES",cout <<"scale for NLO: " << scaleForNLO <<  endl;)
 	NAMED_DEBUG("ALPHAS_SCALES",cout <<"ME scale: " << Q <<  " original: "<< Ev.muR << endl;)
@@ -828,7 +836,6 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 		NAMED_DEBUG("KEITH",cout << "To compare: st_mufac2: " << q0*q0 << endl;)
 		double factor=sfactor*alphaFactor*bornFactor;
 		NAMED_DEBUG("KEITH",cout << "To compare: weight: " << factor << endl;)
-		static QofAlphasInterpolated* QoA=new QofAlphasInterpolated();
 		double effectiveAlphas=exp(log(sfactor*alphaFactor)/double(MI.d_njetsOrig))*oldAlpha;  // this spreads the factor to all alphas, not including the subtraction
 		minloImpl::g_MinloFactor=sfactor*alphaFactor;
 		minloImpl::g_MinloScale=(*QoA)(effectiveAlphas);
@@ -838,12 +845,14 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 		//return sfactor*alphaFactor*(1-alphaForNLO*subtraction);
 	} else {
 		double b0=(33-2*5)/12.0/3.14159265358979323846264;
-		//double fullSubtraction= alphaForNLO*(subtraction+d_njetsOrig*b0*2*log(scaleForNLO/fixedScaleForNLO));
 		double fullSubtraction= alphaForNLO*(subtraction+MI.d_njetsOrig*b0*2*log(scaleForNLO/Ev.muR));
 		double bornFactor=(1+fullSubtraction);
 		double nlofac=alphaForNLO/oldAlpha;
-		NAMED_DEBUG("ALPHAS_SCALES",cout <<"full subtraction: " << fullSubtraction <<  endl;)
-		NAMED_DEBUG("ALPHAS_SCALES",cout <<"full born factor: " << bornFactor <<  endl;)
+
+		NAMED_DEBUG("ALPHAS_SCALES",
+			cout <<"full subtraction: " << fullSubtraction <<  endl;
+			cout <<"full born factor: " << bornFactor <<  endl;
+		)
 		NAMED_DEBUG("KEITH",cout << "To compare: basicfac: " << sfactor*(alphaFactor/nlofac) << endl;) // in this case my alphafactor include nlofac already, need to divide out to compare
 		NAMED_DEBUG("KEITH",cout << "To compare: bornfac: " << bornFactor << endl;)
 		NAMED_DEBUG("KEITH",cout << "To compare: nlofac: " << nlofac << endl;)
