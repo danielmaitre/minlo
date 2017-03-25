@@ -54,7 +54,7 @@ int main(int ac,char** av){
 
 
 	ifstream is;
-	is.open(vm["config-file"].as<std::string>());
+	is.open(vm["config-file"].as<std::string>().c_str());
 	po::store(po::parse_config_file(is,desc), vm);
 	po::notify(vm);
 
