@@ -18,6 +18,9 @@ void currentPDF::setCurrent(LHAPDF::PDF* pdf,LHAPDF::PDFSet* set){
   s_PDF=pdf;
   s_PDFSet=set;
 }
+void currentPDF::setCurrent(LHAPDF::PDF* pdf){
+  s_PDF=pdf;
+}
 
 #endif
 

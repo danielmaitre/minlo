@@ -19,6 +19,7 @@ public:
 	static LHAPDF::PDFSet* s_PDFSet;
 	static void init(const std::string& name, int set);
 	static void setCurrent(LHAPDF::PDF* pdf,LHAPDF::PDFSet* set);
+	static void setCurrent(LHAPDF::PDF* pdf);
 };
 
 #endif

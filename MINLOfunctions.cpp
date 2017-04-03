@@ -20,6 +20,7 @@
 #include "InterpolatedFunction.h"
 #include "pdf.h"
 #include "utils.h"
+#include "nll.h"
 
 using namespace std;
 
@@ -42,7 +43,7 @@ const double fixedScaleForNLO=80.419;
 //bool raisingAllTheWay=true;
 // if set to true then the local scale cannot be smaller than the largest clustering scale
 bool raisingScales=true;
-bool useKeithAlphas=true;
+
 double alphasScaleMin=1;
 double minRenScale=1;
 
@@ -80,10 +81,10 @@ std::ostream & operator<<(std::ostream& ostr, const sudakovCandidate & sc){
 } ;
 
 
-double getAlphasQ(double Q){
+double getAlphasQ(double Q,bool useKeithAlphas){
 	double res;
 	if (Q<alphasScaleMin){
-		res=getAlphasQ(alphasScaleMin);
+		res=getAlphasQ(alphasScaleMin,useKeithAlphas);
 	} else {
 		if (useKeithAlphas){
 			double Q2=Q*Q;
@@ -99,7 +100,7 @@ double getAlphasQ(double Q){
 	return res;
 }
 
-double getAlphasQ2(double Q2){
+double getAlphasQ2(double Q2,bool useKeithAlphas){
 	if (useKeithAlphas){
 		return I_PWHG_ALPHAS(Q2,KEITH_st_lambda5MSB,KEITH_st_nlight, KEITH_rad_charmthr2, KEITH_rad_bottomthr2);
 	} else {
@@ -147,16 +148,11 @@ void displayClusterHistory(fastjet::ClusterSequence& cs){
 	}
 }
 
-double nll_sudakov_withInfo(const  double &q20,const double &q2h,const double &q2l,const int &flav){
-	NAMED_DEBUG("SUDAKOV_ARGUMENTS",cout <<"sudakov args q0: " << sqrt(q20)  <<" qh: " << sqrt(q2h)  <<" ql: " << sqrt(q2l)  <<" flav: " << flav <<  endl;)
-	return NLL_SUDAKOV(q20,q2h,q2l,flav);
-};
 
-
-void computeSudakov(double highScale,double lowScale,double q02,int flavor,double& sudakov, double& bornSub) {
+void computeSudakov(const MinloInfo& MI,double highScale,double lowScale,double q02,int flavor,double& sudakov, double& bornSub) {
 	if (highScale > lowScale) {
 		//sudakov=lo_sudakov(q02,highScale,lowScale,f % 21 );
-		sudakov = nll_sudakov_withInfo(q02, highScale, lowScale,
+		sudakov = nll_sudakov_withInfo(MI,q02, highScale, lowScale,
 				flavor % 21);
 		bornSub = EXPSUDAKOV(q02, highScale, lowScale, flavor % 21);
 	} else {
@@ -170,8 +166,7 @@ void computeSudakov(double highScale,double lowScale,double q02,int flavor,doubl
 
 double getSudakovFactor(
 		fastjet::ClusterSequence& cs,
-		int njetsStart,
-		int nclusterings,
+		const MinloInfo& MI,
 		vector<double>& clusteringScales,
 		double& Qlocal,
 		double& q0,
@@ -179,9 +174,11 @@ double getSudakovFactor(
 		double &bornSubtraction,
 		int &status,
 		const TLorentzVector& basicProcess4Vector,
-		bool isReal=false,
-		bool raisingAllTheWay=false,bool useHT2=false){
+		bool isReal=false
+	){
 
+	int njetsStart=MI.d_njetsOrig;
+	int nclusterings=MI.d_njetsOrig - MI.d_njetsClus;
 	NAMED_DEBUG("DISPLAY_CS",displayClusterHistory(cs));
     NAMED_DEBUG("DISPLAY_CS_DOT",displayClusterHistoryDot(cs,std::cout));
 	//double MEscale2 = Q * Q;
@@ -304,19 +301,21 @@ double getSudakovFactor(
 		double nextScale2=cs.history()[historyIndex].dij;
     if (nextScale2<lastScale2){
 			NAMED_DEBUG("CLUSTERING_STEPS",	cout << " -!!! Step " << historyIndex << " has a lower scale "<< sqrt(nextScale2) << " than before "<< sqrt(lastScale2)<< endl;)
-			if (raisingAllTheWay){
+			if (MI.d_stopAfterFirstDrop){
+				break;
+			} else if (MI.d_alltheway){
 				nextScale2=lastScale2;
 				const fastjet::ClusterSequence::history_element& che=cs.history()[historyIndex];
 				fastjet::ClusterSequence::history_element& he=const_cast<fastjet::ClusterSequence::history_element&>(che);
 				he.dij=lastScale2;
-				NAMED_DEBUG("CLUSTERING_STEPS",cout << " keep last scale (raisingAllTheWay=true)" << endl;)
+				NAMED_DEBUG("CLUSTERING_STEPS",cout << " keep last scale (alltheway=true)" << endl;)
 			} else {
 				lastScale2=nextScale2;
-				NAMED_DEBUG("CLUSTERING_STEPS",cout << " didn't keep last scale (raisingAllTheWay=false)" << endl;)
+				NAMED_DEBUG("CLUSTERING_STEPS",cout << " didn't keep last scale (alltheway=false)" << endl;)
 			}
-		} else {
-			lastScale2=nextScale2;
-		}
+	} else {
+		lastScale2=nextScale2;
+	}
     clusteringScales.push_back(sqrt(nextScale2));
     int parent1=history[historyIndex].parent1;
     int parent2=history[historyIndex].parent2;
@@ -432,7 +431,7 @@ double getSudakovFactor(
 
 	std::vector<fastjet::PseudoJet> jetsLeft=cs.exclusive_jets(njetsStart-nbrClusteringsDone);
 
-	if (useHT2){
+	if (MI.d_useHT2){
 		double ht=sqrt(basicProcess4Vector.Perp2()+80.419*80.419);
 		for (int ij=0;ij<jetsLeft.size();ij++){
 			fastjet::PseudoJet& j = jetsLeft[ij];
@@ -489,7 +488,7 @@ double getSudakovFactor(
 	for (int isc=0;isc<scalesConnectedToCoreProcess.size();isc++){
     sudakovCandidate& sc=scalesConnectedToCoreProcess[isc];
 		double sudakov,bornSub;//,bornSubNLL;
-		computeSudakov(Qlocal2,sc.lowScale,q02,sc.flavor,sudakov,bornSub);
+		computeSudakov(MI,Qlocal2,sc.lowScale,q02,sc.flavor,sudakov,bornSub);
     factor*=sudakov;
     // Keith says we should use the LL one
     bornSubtraction+=bornSub;
@@ -505,7 +504,7 @@ double getSudakovFactor(
 			highScale=history[sc.historyIndex].dij ;
 			//highScale=sc.highScale;
 		}
-		computeSudakov(highScale,sc.lowScale,q02,sc.flavor,sudakov,bornSub);
+		computeSudakov(MI,highScale,sc.lowScale,q02,sc.flavor,sudakov,bornSub);
     factor*=sudakov;
     // Keith says we should use the LL one
     bornSubtraction+=bornSub;
@@ -548,7 +547,7 @@ double getSudakovFactor(
 	}
 
 	for (int ii=0;ii<scales_beamForward.size()-1;ii++){
-  	double sudakov=nll_sudakov_withInfo(q02,scales_beamForward[ii+1],scales_beamForward[ii],pdg_beamForward[ii] % 21 );
+  	double sudakov=nll_sudakov_withInfo(MI,q02,scales_beamForward[ii+1],scales_beamForward[ii],pdg_beamForward[ii] % 21 );
     factor*=sudakov;
     double bornSub=EXPSUDAKOV(q02,scales_beamForward[ii+1],scales_beamForward[ii],pdg_beamForward[ii] % 21 );
     bornSubtraction+=bornSub;
@@ -559,7 +558,7 @@ double getSudakovFactor(
   }
   NAMED_DEBUG("BEAM_SCALES",    cout << "~~~~~"<< endl;)
   for (int ii=0;ii<scales_beamBackward.size()-1;ii++){
-   	double sudakov=nll_sudakov_withInfo(q02,scales_beamBackward[ii+1],scales_beamBackward[ii],pdg_beamBackward[ii] % 21);
+   	double sudakov=nll_sudakov_withInfo(MI,q02,scales_beamBackward[ii+1],scales_beamBackward[ii],pdg_beamBackward[ii] % 21);
 		factor*=sudakov;
     double bornSub=EXPSUDAKOV(q02,scales_beamBackward[ii+1],scales_beamBackward[ii],pdg_beamBackward[ii] % 21 );
 		bornSubtraction+=bornSub;
@@ -601,7 +600,7 @@ double getSudakovFactor(
             bornSub=0;
         } else {
         	if (highScale2>q02){
-            	sudakov=nll_sudakov_withInfo(q02,highScale2,q02,f % 21 );
+            	sudakov=nll_sudakov_withInfo(MI,q02,highScale2,q02,f % 21 );
                 bornSub=EXPSUDAKOV(q02,highScale2,q02,f % 21 );
         	} else {
                 sudakov=1;
@@ -763,7 +762,7 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 	vector<double> scales;
 	double subtraction;
 	double Qlocal; // the scale of the core process after doing the clusterings that are allowed
-	double sfactor=getSudakovFactor(cs,MI.d_njetsOrig,nclusterings,scales,Qlocal,q0,shat,subtraction,status,basicProcess,isReal,MI.d_alltheway,MI.d_useHT2);
+	double sfactor=getSudakovFactor(cs,MI,scales,Qlocal,q0,shat,subtraction,status,basicProcess,isReal);
 	NAMED_DEBUG("SUDAKOV_FACTOR",cout << "Factor from sudakovs: " << sfactor << endl;)
 	NAMED_DEBUG("SUDAKOV_FACTOR",cout << "born subtraction: " << subtraction << endl;)
 	NAMED_DEBUG("ALPHAS_SCALES",cout << "number of clustering scales: " << scales.size();
@@ -777,7 +776,7 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 	double newAlpha;
 	double scaleProduct=1;
 	for (int i =0; i<scales.size();i++){
-		newAlpha=getAlphasQ(scales[i]);
+		newAlpha=getAlphasQ(scales[i],!MI.d_usePDFalphas);
 		NAMED_DEBUG("ALPHAS_SCALES",cout << "alphas from clustering scale "<< scales[i] << ": "<< newAlpha << endl;)
 		alphaFactor/=oldAlpha;
 		alphaFactorDen*=oldAlpha;
@@ -788,7 +787,7 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 	}
 	// this is to set the alphas in the primary process to the ME scale
 	for (int i =1;i<=MI.d_njetsClus+MI.d_njetsOrig-scales.size();i++){
-		newAlpha=getAlphasQ(Qlocal);
+		newAlpha=getAlphasQ(Qlocal,!MI.d_usePDFalphas);
 		NAMED_DEBUG("ALPHAS_SCALES",cout << "alphas from primary process scale "<< Qlocal << ": "<< newAlpha << endl;)
 		alphaFactor/=oldAlpha;
 		alphaFactorDen*=oldAlpha;

@@ -15,38 +15,42 @@ struct MinloInfo {
 	bool d_useModifiedR;
 	enum scaleMode { geometric,inverseAlpha};
 	scaleMode d_scaleMode;
+	bool d_stopAfterFirstDrop;
+	bool d_usePDFalphas;
+	bool d_useSherpa;
+	int d_sherpaMode;
 
-  void print(std::ostream& os) {
-    os << "njetsOrig  : " << d_njetsOrig << std::endl;
-    os << "njetsClus  : " << d_njetsClus << std::endl;
-    os << "beam energy: " << d_energy << std::endl;
-    os << "R          : " << d_R << std::endl;
-    if ( d_type == MinloInfo::born){
-      os << "type  : born" << std::endl;
-    }
-    if ( d_type == MinloInfo::nlo){
-      os << "type  : nlo" << std::endl;
-    }
-    if ( d_type == MinloInfo::bornLO){
-      os << "type  : bornLO" << std::endl;
-    }
-    if ( d_type == MinloInfo::real){
-      os << "type  : real" << std::endl;
-    }
-    os << "alltheway: " ;
-    if (d_alltheway==0){
-    	os << "no" << std::endl;
-	} else {
-		os << "yes" <<std::endl;
-	}
+	void print(std::ostream& os) {
+		os << "njetsOrig  : " << d_njetsOrig << std::endl;
+		os << "njetsClus  : " << d_njetsClus << std::endl;
+		os << "beam energy: " << d_energy << std::endl;
+		os << "R          : " << d_R << std::endl;
+		if ( d_type == MinloInfo::born){
+		  os << "type  : born" << std::endl;
+		}
+		if ( d_type == MinloInfo::nlo){
+		  os << "type  : nlo" << std::endl;
+		}
+		if ( d_type == MinloInfo::bornLO){
+		  os << "type  : bornLO" << std::endl;
+		}
+		if ( d_type == MinloInfo::real){
+		  os << "type  : real" << std::endl;
+		}
+		os << "alltheway: " ;
+		if (d_alltheway==0){
+			os << "no" << std::endl;
+		} else {
+			os << "yes" <<std::endl;
+		}
 
-	  os << "use modified R definition: " ;
-	  if (!d_useModifiedR){
-		  os << "no" << std::endl;
-		  	  } else {
-		  os << "yes" <<std::endl;
+		  os << "use modified R definition: " ;
+		  if (!d_useModifiedR){
+			  os << "no" << std::endl;
+				  } else {
+			  os << "yes" <<std::endl;
+		}
 	}
-}
 };
 
 

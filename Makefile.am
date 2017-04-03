@@ -18,7 +18,9 @@ libMINLOlib_la_SOURCES = \
 	debug.h debug.cpp \
 	pdf.h pdf.cpp \
 	utils.h utils.cpp \
-	MinloReader.h MinloReader.cpp
+	MinloReader.h MinloReader.cpp \
+	sudakovs.cpp sudakovs.h \
+	nll.h nll.cpp
 
 AM_LDFLAGS =  $(FASTJET_LDFLAGS) $(LHAPDF_LDFLAGS) 
 AM_LDFLAGS += $(ROOT_LIBS)
@@ -69,7 +71,7 @@ LIBS += $(BOOST_PROGRAM_OPTIONS_LIB)
 
 bin_SCRIPTS=MINLOlib-config
 
-pkginclude_HEADERS = MINLOfunctions.h MinloInfo.h pdf.h
+pkginclude_HEADERS = MINLOfunctions.h MinloInfo.h pdf.h nll.h
 
 uninstall-hook:
 	rm -f  $(DESTDIR)$(libdir)/_MinloReader.so
