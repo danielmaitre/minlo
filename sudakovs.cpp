@@ -5,6 +5,7 @@
  *      Author: daniel
  */
 #include "LHAPDF/LHAPDF.h"
+#include "sudakovs.h"
 #include "gsl/gsl_integration.h"
 #include "MinloKeithDeclarations.h"
 #include "pdf.h"
@@ -28,11 +29,11 @@ double Ggq(const double &e,const double &q2,double m=0.0)
   return 0.5/(q2+m*m)*sqr(1.0-e)*(1.0-(1.0-e)*(1.0+3.0*e)/3.0*q2/(q2+m*m));
 }
 
-double SherpaIntegrand(double q2,double Q2,char fl,LHAPDF::PDF* pdf,bool m_fo=false,int m_mode=3,double m_mur2=1.0){
+double SherpaIntegrand(double q2,double Q2,char fl,LHAPDF::PDF* pdf,bool m_fo,int m_mode,double m_mur2){
 	double eps(sqrt(q2/Q2));
 	double e((m_mode&1)?eps:0.0);
-	double nf(pdf->alphaS().numFlavorsQ2(m_fo?m_mur2:q2));
 	double as2pi=pdf->alphasQ2((m_fo?m_mur2:q2))/(2.0*M_PI);
+	double nf(pdf->alphaS().numFlavorsQ2(m_fo?m_mur2:q2));
 	if (fl=='q') {
 	  double gam=as2pi/q2*4.0/3.0*
 		(2.0*log(1.0/eps)*(1.0+as2pi*K(nf,m_fo,m_mode))
@@ -66,13 +67,18 @@ double SherpaIntegrand(double q2,double Q2,char fl,LHAPDF::PDF* pdf,bool m_fo=fa
 	return 0.0;
 }
 
-double alphasKeith(double Q2,int nf){
+double alphasKeith(double Q2,int nf,double lambda2){
 	const double b0=(33.0-2*nf)/(12*M_PI);
 	const double b1=(153.0-19*nf)/(24*M_PI*M_PI);
-	const double Lambda2=0.226*0.226;
-
-	double l=log(Q2/Lambda2);
+	double l=log(Q2/lambda2);
 	double alphas=1.0/(b0*l)*(1.0 - b1*log(l)/(b0*b0*l));
+	return alphas;
+};
+
+double alphasLOKeith(double Q2,int nf,double lambda2){
+	const double b0=(33.0-2*nf)/(12*M_PI);
+	double l=log(Q2/lambda2);
+	double alphas=1.0/(b0*l);
 	return alphas;
 };
 

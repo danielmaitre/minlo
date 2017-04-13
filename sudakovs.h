@@ -23,7 +23,8 @@ double SherpaExponentGluon(double q02, double q2,LHAPDF::PDF* pdf,int mode);
 double SherpaSudakov(double q20,double q2h,double q2l,int flav,LHAPDF::PDF* pdf ,int mode);
 double KeithSudakov(double q20,double q2h,double q2l,int flav,LHAPDF::PDF* pdf);
 
-double alphasKeith(double Q2,int nf=5);
+double alphasKeith(double Q2,int nf=5,double lambda2=0.226*0.226);
+double alphasLOKeith(double Q2,int nf=5,double lambda2=0.226*0.226);
 
 
 
