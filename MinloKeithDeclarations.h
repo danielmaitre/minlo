@@ -13,6 +13,7 @@
 
 
 #define I_PWHG_ALPHAS FC_UNDERSORE(i_pwhg_alphas)
+#define I_PWHG_ALPHAS0 FC_UNDERSORE(i_pwhg_alphas0)
 #define LO_SUDAKOV FC_UNDERSORE(lo_sudakov)
 #define EXPSUDAKOV FC_UNDERSORE(expsudakov)
 #define SUDAKOV_EXPONENT FC_UNDERSORE(sudakov_exponent)
@@ -74,7 +75,7 @@ int& alltheway
 
 
   double FC_UNDERSORE(i_pwhg_alphas)(double &Q2,double &st_lambda5MSB, int &st_nlight,double &rad_charmthr2,double &rad_bottomthr2);
-
+  double FC_UNDERSORE(i_pwhg_alphas0)(double &Q2,double &lambda, int &st_nlight);
 }
 
 

@@ -81,14 +81,22 @@ std::ostream & operator<<(std::ostream& ostr, const sudakovCandidate & sc){
 } ;
 
 
-double getAlphasQ(double Q,bool useKeithAlphas){
+double getAlphasQ(double Q,const MinloInfo& MI){
 	double res;
 	if (Q<alphasScaleMin){
-		res=getAlphasQ(alphasScaleMin,useKeithAlphas);
+		res=getAlphasQ(alphasScaleMin,MI);
 	} else {
-		if (useKeithAlphas){
-			double Q2=Q*Q;
-			res = I_PWHG_ALPHAS(Q2,KEITH_st_lambda5MSB,KEITH_st_nlight, KEITH_rad_charmthr2, KEITH_rad_bottomthr2);
+		if (!MI.d_usePDFalphas){
+			if (MI.d_useLOalphas){
+				double Q2=Q*Q;
+				double l=MI.d_lambda;
+				res = I_PWHG_ALPHAS(Q2,l,KEITH_st_nlight, KEITH_rad_charmthr2, KEITH_rad_bottomthr2);
+			} else {
+				double Q2=Q*Q;
+				double l2=MI.d_lambda*MI.d_lambda;
+				int nf=5;
+				res = I_PWHG_ALPHAS0(Q2,l2,nf);
+			}
 		} else {
 		#ifdef LHAPDF_NEW_VERSION
 			res = currentPDF::s_PDF->alphasQ(Q);
@@ -776,7 +784,7 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 	double newAlpha;
 	double scaleProduct=1;
 	for (int i =0; i<scales.size();i++){
-		newAlpha=getAlphasQ(scales[i],!MI.d_usePDFalphas);
+		newAlpha=getAlphasQ(scales[i],MI);
 		NAMED_DEBUG("ALPHAS_SCALES",cout << "alphas from clustering scale "<< scales[i] << ": "<< newAlpha << endl;)
 		alphaFactor/=oldAlpha;
 		alphaFactorDen*=oldAlpha;
@@ -787,7 +795,7 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 	}
 	// this is to set the alphas in the primary process to the ME scale
 	for (int i =1;i<=MI.d_njetsClus+MI.d_njetsOrig-scales.size();i++){
-		newAlpha=getAlphasQ(Qlocal,!MI.d_usePDFalphas);
+		newAlpha=getAlphasQ(Qlocal,MI);
 		NAMED_DEBUG("ALPHAS_SCALES",cout << "alphas from primary process scale "<< Qlocal << ": "<< newAlpha << endl;)
 		alphaFactor/=oldAlpha;
 		alphaFactorDen*=oldAlpha;
