@@ -56,13 +56,20 @@ def KeithSudakovFactor(q20,q2h,q2l,int fl,lhapdf.PDF pdf):
     return KeithSudakov(q20,q2h,q2l,fl,pdf._ptr)
 
 cdef extern from "../sudakovs.h":
-     double alphasKeith(double Q2,int nf)
+     double alphasKeith(double Q2,int nf,double lambda2)
+     double alphasLOKeith(double Q2,int nf,double lambda2)
 
-def alphasQ2Keith(Q2,nf=5):
-    return  alphasKeith(Q2,nf)
+def alphasQ2Keith(Q2,nf=5,lambda2=0.226**2):
+    return  alphasKeith(Q2,nf,lambda2)
 
-def alphasQKeith(Q,nf=5):
-    return  alphasKeith(Q*Q,nf)
+cpdef alphasQKeith(Q,nf=5,lam=0.226):
+    return  alphasKeith(Q*Q,nf,lam*lam)
+
+def alphasLOQ2Keith(Q2,nf=5,lambda2=0.226**2):
+    return  alphasLOKeith(Q2,nf,lambda2)
+
+cpdef alphasLOQKeith(Q,nf=5,lam=0.226):
+    return  alphasLOKeith(Q*Q,nf,lam*lam)
 
 def k(nf,mode):
     return  K(nf,False,mode)
