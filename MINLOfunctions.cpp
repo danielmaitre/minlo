@@ -89,13 +89,13 @@ double getAlphasQ(double Q,const MinloInfo& MI){
 		if (!MI.d_usePDFalphas){
 			if (MI.d_useLOalphas){
 				double Q2=Q*Q;
-				double l=MI.d_lambda;
-				res = I_PWHG_ALPHAS(Q2,l,KEITH_st_nlight, KEITH_rad_charmthr2, KEITH_rad_bottomthr2);
-			} else {
-				double Q2=Q*Q;
 				double l2=MI.d_lambda*MI.d_lambda;
 				int nf=5;
 				res = I_PWHG_ALPHAS0(Q2,l2,nf);
+			} else {
+				double Q2=Q*Q;
+				double l=MI.d_lambda;
+				res = I_PWHG_ALPHAS(Q2,l,KEITH_st_nlight, KEITH_rad_charmthr2, KEITH_rad_bottomthr2);
 			}
 		} else {
 		#ifdef LHAPDF_NEW_VERSION
