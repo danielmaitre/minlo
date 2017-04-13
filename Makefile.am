@@ -20,6 +20,7 @@ libMINLOlib_la_SOURCES = \
 	utils.h utils.cpp \
 	MinloReader.h MinloReader.cpp \
 	sudakovs.cpp sudakovs.h \
+	MinloInfo.h MinloInfo.cpp \
 	nll.h nll.cpp
 
 AM_LDFLAGS =  $(FASTJET_LDFLAGS) $(LHAPDF_LDFLAGS) 

@@ -19,6 +19,8 @@ struct MinloInfo {
 	bool d_usePDFalphas;
 	bool d_useSherpa;
 	int d_sherpaMode;
+	bool d_useLOalphas;
+	double d_lambda;
 
 	void print(std::ostream& os) {
 		os << "njetsOrig  : " << d_njetsOrig << std::endl;
@@ -51,6 +53,7 @@ struct MinloInfo {
 			  os << "yes" <<std::endl;
 		}
 	}
+	void readFromStream(std::istream& is);
 };
 
 

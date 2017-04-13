@@ -26,21 +26,10 @@ int main(int ac,char** av){
     	("run.startEntry", po::value<long>()->default_value(1), "1-based entry to start at")
     	("run.endEntry", po::value<long>()->default_value(0), "1-based entry to end at")
     	("config-file", po::value<std::string>()->default_value("run.cfg"), "config file to be read")
-    	("minlo.njetsOrig", po::value<int>(), "number of jets to start with")
-    	("minlo.njetsClus", po::value<int>(), "number of jets to cluster to")
-    	("minlo.beamEnergy", po::value<double>(), "beam energy")
-		("minlo.type",po::value<std::string>(),"type of contribution")
-		("minlo.radius",po::value<double>()->default_value(1.0),"radius for the kt clustering")
-    	("keith.flg_bornonly", po::value<int>(), " Are we feeding through only Born stuff (1), or NLO (0)?")
-    	("keith.imode", po::value<int>(), " imode=1 for Born, imode=2 for all NLO contribs")
-    	("keith.nlegborn", po::value<int>(), " number of legs in the born process (including initial state f.ex. W+2j -->6)")
-    	("keith.st_bornorder", po::value<int>(), " power of alphas in the born process")
-    	("minlo.alltheway", po::value<int>(), " non-zero for the raising-all-the-way policy")
-		("minlo.useHT2",po::value<bool>()->default_value(false),"whether to use HT/2")
-		("minlo.useModifiedR",po::value<bool>()->default_value(false),"whether to use the modified R definition")
-		("minlo.scaleMode",po::value<std::string>()->default_value("geometric"),"mode for the nlo scale, either geometric or inverseAlpha")
-		("minlo.stopAfterFirstDrop",po::value<bool>()->default_value(false),"whether to stop clustering when a nodal scale becomes smaller than its predecessor.")
-		("minlo.usePDFalphas",po::value<bool>()->default_value(false),"whether to use alphas from the pdf rather than the build in one.")
+		("keith.flg_bornonly", po::value<int>(), " Are we feeding through only Born stuff (1), or NLO (0)?")
+		("keith.imode", po::value<int>(), " imode=1 for Born, imode=2 for all NLO contribs")
+		("keith.nlegborn", po::value<int>(), " number of legs in the born process (including initial state f.ex. W+2j -->6)")
+		("keith.st_bornorder", po::value<int>(), " power of alphas in the born process")
     	;
 
 
@@ -53,10 +42,9 @@ int main(int ac,char** av){
 	po::store(po::command_line_parser(ac, av).options(desc).positional(p).run(), vm);
 	po::notify(vm);
 
-
 	ifstream is;
 	is.open(vm["config-file"].as<std::string>().c_str());
-	po::store(po::parse_config_file(is,desc), vm);
+	po::store(po::parse_config_file(is,desc,true), vm);
 	po::notify(vm);
 
 
@@ -92,49 +80,21 @@ int main(int ac,char** av){
 
 	r.addFiles(fs);
 
-
-	MinloInfo MI;
 	KeithInfo KI;
-
-	// number of jets at the beginning
-	MI.d_njetsOrig=vm["minlo.njetsOrig"].as<int>();
-	// number of jets to cluster to
-	MI.d_njetsClus=vm["minlo.njetsClus"].as<int>();
-	MI.d_energy=vm["minlo.beamEnergy"].as<double>();
-	if ( vm["minlo.type"].as<std::string>() == "born"){
-		MI.d_type=MinloInfo::born;
-	}
-	if ( vm["minlo.type"].as<std::string>() == "real"){
-		MI.d_type=MinloInfo::real;
-	}
-	if ( vm["minlo.type"].as<std::string>() == "nlo"){
-		MI.d_type=MinloInfo::nlo;
-	}
-	if ( vm["minlo.type"].as<std::string>() == "bornLO"){
-		MI.d_type=MinloInfo::bornLO;
-	}
-	MI.d_R=vm["minlo.radius"].as<double>();
-	MI.d_alltheway=vm["minlo.alltheway"].as<int>();
-	MI.d_useHT2=vm["minlo.useHT2"].as<bool>();
-	MI.d_useModifiedR=vm["minlo.useModifiedR"].as<bool>();
-	MI.d_stopAfterFirstDrop=vm["minlo.stopAfterFirstDrop"].as<bool>();
-	MI.d_usePDFalphas=vm["minlo.usePDFalphas"].as<bool>();
-	if ( vm["minlo.scaleMode"].as<std::string>() == "geometric"){
-		MI.d_scaleMode=MinloInfo::geometric;
-	} else if ( vm["minlo.scaleMode"].as<std::string>() == "inverseAlpha"){
-		MI.d_scaleMode=MinloInfo::inverseAlpha;
-	} else {
-		cout << "wrong setting for scaleMode!" << endl;
-	}
-
-	MI.print(std::cout);
-
-
-
 	KI.flg_bornonly=vm["keith.flg_bornonly"].as<int>();    //! Are we feeding through only Born stuff (1), or NLO (0)?
 	KI.imode=vm["keith.imode"].as<int>();           //! imode=1 for Born, imode=2 for all NLO contribs
 	KI.nlegborn=vm["keith.nlegborn"].as<int>();           //
 	KI.st_bornorder=vm["keith.st_bornorder"].as<int>();
+
+	ifstream isminlo;
+	isminlo.open(vm["config-file"].as<std::string>().c_str());
+
+	MinloInfo MI;
+	MI.readFromStream(isminlo);
+
+
+	MI.print(std::cout);
+
 
 
 
