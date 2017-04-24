@@ -23,6 +23,11 @@ public:
 	static double g_nclusterings;  //needs to be a double for simplicity of the interface
 };
 
+class minloDot{
+public:
+	static bool s_MinloWriteDot;
+	static std::ostream *s_stream;
+};
 
 
 

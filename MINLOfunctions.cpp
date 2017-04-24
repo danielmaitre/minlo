@@ -33,6 +33,9 @@ double minloImpl::g_MinloFactor;
 double minloImpl::g_nclusterings;
 bool minloImpl::g_MinloScaleValid;
 
+bool minloDot::s_MinloWriteDot=false;
+std::ostream *minloDot::s_stream=0;
+
 
 const double fixedScaleForNLO=80.419;
 
@@ -189,7 +192,10 @@ double getSudakovFactor(
 	int nclusterings=MI.d_njetsOrig - MI.d_njetsClus;
 	NAMED_DEBUG("DISPLAY_CS",displayClusterHistory(cs));
     NAMED_DEBUG("DISPLAY_CS_DOT",displayClusterHistoryDot(cs,std::cout));
-	//double MEscale2 = Q * Q;
+	if (minloDot::s_MinloWriteDot){
+		displayClusterHistoryDot(cs,*minloDot::s_stream);
+	}
+    //double MEscale2 = Q * Q;
 
 	double factor = 1;
 	bornSubtraction =0;
