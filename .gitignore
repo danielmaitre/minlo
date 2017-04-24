@@ -27,3 +27,5 @@ FlavKtPlugin/Makefile.in
 /.cproject
 /.project
 /.autotools
+/build
+/build_previous
