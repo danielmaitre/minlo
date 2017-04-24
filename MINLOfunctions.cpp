@@ -92,9 +92,9 @@ double getAlphasQ(double Q,const MinloInfo& MI){
 		if (!MI.d_usePDFalphas){
 			if (MI.d_useLOalphas){
 				double Q2=Q*Q;
-				double l2=MI.d_lambda*MI.d_lambda;
+				double l=MI.d_lambda;
 				int nf=5;
-				res = I_PWHG_ALPHAS0(Q2,l2,nf);
+				res = I_PWHG_ALPHAS0(Q2,l,nf);
 			} else {
 				double Q2=Q*Q;
 				double l=MI.d_lambda;
