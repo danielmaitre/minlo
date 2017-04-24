@@ -11,7 +11,6 @@ struct MinloInfo {
 	wType d_type;
 	int d_alltheway;
 	double d_R;
-	bool d_useHT2;
 	bool d_useModifiedR;
 	enum scaleMode { geometric,inverseAlpha};
 	scaleMode d_scaleMode;
@@ -21,6 +20,8 @@ struct MinloInfo {
 	int d_sherpaMode;
 	bool d_useLOalphas;
 	double d_lambda;
+	enum coreScaleChoice { shat, hthalf, stefan};
+	coreScaleChoice d_coreScaleType;
 
 	void print(std::ostream& os) {
 		os << "njetsOrig  : " << d_njetsOrig << std::endl;

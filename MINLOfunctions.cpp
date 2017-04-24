@@ -445,8 +445,8 @@ double getSudakovFactor(
 
 	std::vector<fastjet::PseudoJet> jetsLeft=cs.exclusive_jets(njetsStart-nbrClusteringsDone);
 
-	if (MI.d_useHT2){
-		double ht=sqrt(basicProcess4Vector.Perp2()+80.419*80.419);
+	if (MI.d_coreScaleType==MinloInfo::hthalf){
+		double ht=sqrt(basicProcess4Vector.Perp2()+80.385*80.385);
 		for (int ij=0;ij<jetsLeft.size();ij++){
 			fastjet::PseudoJet& j = jetsLeft[ij];
 			NAMED_DEBUG("CORE_PROCESS_SCALE",

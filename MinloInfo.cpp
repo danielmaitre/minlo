@@ -25,7 +25,7 @@ void MinloInfo::readFromStream(std::istream& is){
 	("minlo.type",po::value<std::string>(),"type of contribution")
 	("minlo.radius",po::value<double>()->default_value(1.0),"radius for the kt clustering")
 	("minlo.alltheway", po::value<int>(), " non-zero for the raising-all-the-way policy")
-	("minlo.useHT2",po::value<bool>()->default_value(false),"whether to use HT/2")
+	("minlo.coreScale",po::value<std::string>()->default_value("shat"),"core scale choice")
 	("minlo.useModifiedR",po::value<bool>()->default_value(false),"whether to use the modified R definition")
 	("minlo.scaleMode",po::value<std::string>()->default_value("geometric"),"mode for the nlo scale, either geometric or inverseAlpha")
 	("minlo.stopAfterFirstDrop",po::value<bool>()->default_value(false),"whether to stop clustering when a nodal scale becomes smaller than its predecessor.")
@@ -61,7 +61,6 @@ void MinloInfo::readFromStream(std::istream& is){
 	}
 	d_R=vm["minlo.radius"].as<double>();
 	d_alltheway=vm["minlo.alltheway"].as<int>();
-	d_useHT2=vm["minlo.useHT2"].as<bool>();
 	d_useModifiedR=vm["minlo.useModifiedR"].as<bool>();
 	d_stopAfterFirstDrop=vm["minlo.stopAfterFirstDrop"].as<bool>();
 	d_usePDFalphas=vm["minlo.usePDFalphas"].as<bool>();
@@ -77,4 +76,18 @@ void MinloInfo::readFromStream(std::istream& is){
 	} else {
 		std::cout << "wrong setting for scaleMode!" << std::endl;
 	}
+	if ( vm["minlo.coreScale"].as<std::string>() == "shat"){
+		d_coreScaleType=MinloInfo::shat;
+	} else if ( vm["minlo.coreScale"].as<std::string>() == "hthalf"){
+		d_coreScaleType=MinloInfo::hthalf;
+	} else 	if ( vm["minlo.coreScale"].as<std::string>() == "stefan"){
+		d_coreScaleType=MinloInfo::stefan;
+	}
+
+
+		else{
+		std::cout << "wrong setting for scaleMode!" << std::endl;
+	}
+
+
 }
