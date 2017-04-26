@@ -21,6 +21,7 @@
 #include "pdf.h"
 #include "utils.h"
 #include "nll.h"
+#include "coreScales.h"
 
 using namespace std;
 
@@ -185,6 +186,7 @@ double getSudakovFactor(
 		double &bornSubtraction,
 		int &status,
 		const TLorentzVector& basicProcess4Vector,
+		const std::vector<TLorentzVector>& nonPartons,
 		bool isReal=false
 	){
 
@@ -445,32 +447,7 @@ double getSudakovFactor(
 
 	std::vector<fastjet::PseudoJet> jetsLeft=cs.exclusive_jets(njetsStart-nbrClusteringsDone);
 
-	if (MI.d_coreScaleType==MinloInfo::hthalf){
-		double ht=sqrt(basicProcess4Vector.Perp2()+80.385*80.385);
-		for (int ij=0;ij<jetsLeft.size();ij++){
-			fastjet::PseudoJet& j = jetsLeft[ij];
-			NAMED_DEBUG("CORE_PROCESS_SCALE",
-				std::cout << "now adding jet pt " << j.pt() << std::endl;
-				std::cout << "ht so far: " << ht << std::endl;);
-				ht+=j.pt();
-		}
-		NAMED_DEBUG("CORE_PROCESS_SCALE", std::cout << "final core process scale (ht/2): " << ht/2 << " Q^2: "<< ht*ht/4 <<std::endl;);
-		Qlocal=ht/2;
-	} else {
-		TLorentzVector coreProcess(basicProcess4Vector);
-		for (int ij=0;ij<jetsLeft.size();ij++){
-			fastjet::PseudoJet& j = jetsLeft[ij];
-			NAMED_DEBUG("CORE_PROCESS_SCALE",
-					std::cout << "core process vector so far: " << coreProcess.E() <<" " << coreProcess.X() << " " << coreProcess.Y() << " " <<  coreProcess.Z() << std::endl;
-				std::cout << "now adding jet " << j.E() <<" " << j.px() << " " << j.py() << " " <<  j.pz() << std::endl;
-				std::cout << "core process scale so far: " << coreProcess.M() << std::endl;);
-				coreProcess+=TLorentzVector(j.px(),j.py(),j.pz(),j.E());
-		}
-		NAMED_DEBUG("CORE_PROCESS_SCALE", std::cout << "final core process scale: " << coreProcess.M() << " Q^2: "<< coreProcess.M() *coreProcess.M() <<std::endl;);
-		Qlocal=coreProcess.M();
-	}
-
-
+	Qlocal=coreScale(MI.d_coreScaleType,basicProcess4Vector,jetsLeft,nonPartons);
 
 	double Qlocal2=Qlocal*Qlocal;
 
@@ -707,41 +684,31 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 	}
 	// needs to be more flexible this will only work for V+jets
 	// need to use the boosted momenta!
-	if (useDouble){
-		basicProcess+=TLorentzVector(
-			evb.pxD[0],
-			evb.pyD[0],
-			evb.pzD[0],
-			evb.ED[0]
-			);
-			} else {
-		basicProcess+=TLorentzVector(
-			evb.px[0],
-			evb.py[0],
-			evb.pz[0],
-			evb.E[0]);
-			}
-	NAMED_DEBUG("CORE_PROCESS_SCALE",
-		std::cout << "core process vector after first lepton: " << basicProcess.E() <<" " << basicProcess.X() << " " << basicProcess.Y() << " " <<  basicProcess.Z() << std::endl;
-	)
-	if (useDouble){
-		basicProcess+=TLorentzVector(
-			evb.pxD[1],
-			evb.pyD[1],
-			evb.pzD[1],
-			evb.ED[1]
-			);
-	} else {
-		basicProcess+=TLorentzVector(
-			evb.px[1],
-			evb.py[1],
-			evb.pz[1],
-			evb.E[1]
-			);
+	std::vector<TLorentzVector> nonPartons;
+	for (int iMom=0;iMom<2;iMom++){
+		if (useDouble){
+			nonPartons.push_back(TLorentzVector(
+					evb.pxD[iMom],
+					evb.pyD[iMom],
+					evb.pzD[iMom],
+					evb.ED[iMom]
+				));
+			basicProcess+=nonPartons.back();
+		} else {
+			nonPartons.push_back(TLorentzVector(
+					evb.px[iMom],
+					evb.py[iMom],
+					evb.pz[iMom],
+					evb.E[iMom]
+			));
+			basicProcess+=nonPartons.back();
+		}
+		NAMED_DEBUG("CORE_PROCESS_SCALE",
+			std::cout << "core process vector after non parton "<<iMom << ": " << basicProcess.E() <<" " << basicProcess.X() << " " << basicProcess.Y() << " " <<  basicProcess.Z() << std::endl;
+		)
+
 	}
-	NAMED_DEBUG("CORE_PROCESS_SCALE",
-		std::cout << "core process vector after second lepton: " << basicProcess.E() <<" " << basicProcess.X() << " " << basicProcess.Y() << " " <<  basicProcess.Z() << std::endl;
-	)
+
 	if (extras->hasFSRboost()){
 		double boostVec[3];
 		extras->getFSRboost(&boostVec[0]);
@@ -749,13 +716,22 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 		NAMED_DEBUG("CORE_PROCESS_SCALE",
 			std::cout << "core process vector after boost: " << basicProcess.E() <<" " << basicProcess.X() << " " << basicProcess.Y() << " " <<  basicProcess.Z() << std::endl;
 		)
+		for (int iMom=0;iMom<nonPartons.size();iMom++){
+			nonPartons[iMom].Boost(boostVec[0],boostVec[1],boostVec[2]);
+		}
 	}
 	if (extras->hasISRboost()){
 		double boostVec[3];
 		extras->getISRzboost(&boostVec[0]);
 		basicProcess.Boost(boostVec[0],boostVec[1],boostVec[2]);
+		for (int iMom=0;iMom<nonPartons.size();iMom++){
+			nonPartons[iMom].Boost(boostVec[0],boostVec[1],boostVec[2]);
+		}
 		extras->getISRxyboost(&boostVec[0]);
 		basicProcess.Boost(boostVec[0],boostVec[1],boostVec[2]);
+		for (int iMom=0;iMom<nonPartons.size();iMom++){
+			nonPartons[iMom].Boost(boostVec[0],boostVec[1],boostVec[2]);
+		}
 		NAMED_DEBUG("CORE_PROCESS_SCALE",
 			std::cout << "core process vector after boost: " << basicProcess.E() <<" " << basicProcess.X() << " " << basicProcess.Y() << " " <<  basicProcess.Z() << std::endl;
 		)
@@ -776,7 +752,7 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 	vector<double> scales;
 	double subtraction;
 	double Qlocal; // the scale of the core process after doing the clusterings that are allowed
-	double sfactor=getSudakovFactor(cs,MI,scales,Qlocal,q0,shat,subtraction,status,basicProcess,isReal);
+	double sfactor=getSudakovFactor(cs,MI,scales,Qlocal,q0,shat,subtraction,status,basicProcess,nonPartons,isReal);
 	NAMED_DEBUG("SUDAKOV_FACTOR",cout << "Factor from sudakovs: " << sfactor << endl;)
 	NAMED_DEBUG("SUDAKOV_FACTOR",cout << "born subtraction: " << subtraction << endl;)
 	NAMED_DEBUG("ALPHAS_SCALES",cout << "number of clustering scales: " << scales.size();
