@@ -67,7 +67,7 @@ bool hasQuarks(const fastjet::ClusterSequence& cs,int njets){
 }
 
 std::string getStyle(const std::string& desc){
-				if (desc=="g (beam)"){
+				if (desc=="g (beam) "){
 					return "style=dotted";
 				} else {
 					return "style=solid";
@@ -87,6 +87,17 @@ std::string getStyle(const fastjet::ClusterSequence& cs,int historyIndex){
 	int pdg=pdgFromFlavor(cs.jets()[cs.history()[historyIndex].jetp_index].user_info<fastjet::FlavInfo>());
 	return getStyle(pdg);
 }
+std::string getStyleParent(const fastjet::ClusterSequence& cs,int historyIndex){
+	int parent=cs.history()[historyIndex].parent1;
+	int jetp=cs.history()[parent].jetp_index;
+	int pdg=pdgFromFlavor(cs.jets()[jetp].user_info<fastjet::FlavInfo>());
+	return getStyle(pdg);
+}
+
+std::string getStyleFromIndex(const fastjet::ClusterSequence& cs,int index){
+	int pdg=pdgFromFlavor(cs.jets()[index].user_info<fastjet::FlavInfo>());
+	return getStyle(pdg);
+}
 
 
 void displayClusterHistoryDot(fastjet::ClusterSequence& cs,std::ostream& os){
@@ -99,7 +110,7 @@ void displayClusterHistoryDot(fastjet::ClusterSequence& cs,std::ostream& os){
 	int forward=0;
 	int backward=1;
 
-	int njetsCurrent=4 ; // change for something else than Z+4j!!!!
+	int njetsCurrent=(n/2)-2 ; // change for something else than Z+4j!!!!
 
 	std::vector<int> forwardNodes;
 	std::vector<int> backwardNodes;
@@ -121,10 +132,10 @@ void displayClusterHistoryDot(fastjet::ClusterSequence& cs,std::ostream& os){
 
 			if (extras->beam_it_clusters_with(j)==+1){
 				os << "// cluster with forward beam " << pdgFromFlavor(extras->beam_flav_forward(njetsCurrent))<<std::endl;
-		        os << "// forward beam before:" << extras->beam_flav_forward(njetsCurrent+1).description() << std::endl;
-			    os << "// forward beam now:" << extras->beam_flav_forward(njetsCurrent).description() << std::endl;
+		        os << "// forward beam before: '" << extras->beam_flav_forward(njetsCurrent+1).description() <<"'"<< std::endl;
+			    os << "// forward beam now:" << extras->beam_flav_forward(njetsCurrent).description() << "(njetsCurrent=" << njetsCurrent << ")" << std::endl;
 				std::string beamstyle=getStyle(extras->beam_flav_forward(njetsCurrent).description());
-				std::string otherstyle=getStyle(cs,parent1);
+				std::string otherstyle=getStyleParent(cs,historyIndex);
 				os << forward << " -- " << historyIndex << " [" << beamstyle <<",weight=0.5]" << std::endl;
 				os << parent1 << " -- " << historyIndex << " ["<< otherstyle << "]"<< std::endl;
 				forward=historyIndex;
@@ -134,7 +145,7 @@ void displayClusterHistoryDot(fastjet::ClusterSequence& cs,std::ostream& os){
 		        os << "// backward beam before:" << extras->beam_flav_backward(njetsCurrent+1).description() << std::endl;
 			    os << "// backward beam now:" << extras->beam_flav_backward(njetsCurrent).description() << std::endl;
 				std::string beamstyle=getStyle(pdgFromFlavor(extras->beam_flav_backward(njetsCurrent)));
-				std::string otherstyle=getStyle(cs,parent1);
+				std::string otherstyle=getStyleParent(cs,historyIndex);
 				os << historyIndex  << " -- " << backward<< " [" << beamstyle  <<",weight=0.5]"<< std::endl;
 				os << parent1 << " -- " << historyIndex << " ["<< otherstyle << "]" << std::endl;
 				backward=historyIndex;
