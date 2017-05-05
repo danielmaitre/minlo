@@ -34,6 +34,7 @@ void MinloInfo::readFromStream(std::istream& is){
 	("minlo.useLOalphas",po::value<bool>()->default_value(false),"whether to use LO alphas running.")
 	("minlo.lambda",po::value<double>()->default_value(0.226),"lambda_QCD for five light flavours")
 	("minlo.sherpaMode", po::value<int>()->default_value(3), "mode for sherpa sudakov")
+	("minlo.useRapidityInClustering", po::value<bool>()->default_value(true), "use rapidity in clustering")
 	;
 
 
@@ -68,7 +69,7 @@ void MinloInfo::readFromStream(std::istream& is){
 	d_lambda=vm["minlo.lambda"].as<double>();
 	d_useSherpa=vm["minlo.useSherpa"].as<bool>();
 	d_sherpaMode=vm["minlo.sherpaMode"].as<int>();
-
+	d_useRapidityInClustering=vm["minlo.useRapidityInClustering"].as<bool>();
 	if ( vm["minlo.scaleMode"].as<std::string>() == "geometric"){
 		d_scaleMode=MinloInfo::geometric;
 	} else if ( vm["minlo.scaleMode"].as<std::string>() == "inverseAlpha"){

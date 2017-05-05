@@ -84,8 +84,13 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
   bool found_flavour = false;
   
   vector<double> pt(2*np);   // if all particles are merged into pseudojets the size of the cs.jets vector can grow above np, 2*np is conservative
+  double wrongYPenalty;
+  if (_useRapidity){
+	  wrongYPenalty=1e24;
+  }  else {
+	  wrongYPenalty=1;
+  }
   
-
   int j = 0; // index in fortran array
   for (int i = 0; i < np; i++) {
     const PseudoJet & particle = cs.jets()[i];
@@ -208,7 +213,7 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 		  double diB=cs.jets()[jetIndex1].pt();
 		  double diB2=diB*diB;
 		  const PseudoJet& j1=cs.jets()[jetIndex1];
-		  NAMED_DEBUG("BEAM_CLUSTERING",cout << "jet flavor " << flavour_of(j1).description() << endl;)
+		  NAMED_DEBUG("BEAM_CLUSTERING",cout << "jet "<< jetIndex1 << " flavor " << flavour_of(j1).description() << endl;)
 		  FlavInfo fb=beam_flavour.backward - flavour_of(j1);
 		  FlavInfo ff=beam_flavour.forward - flavour_of(j1);
 		  int nQ=0;
@@ -227,12 +232,17 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 		  double pt2=pt*pt;
 		  double penaltyForward=1;
 		  double penaltyBackward=1;
+
+		  bool preferForward;
+
 		  if (yjet>yCMF){
-			  penaltyBackward*=1e24;
+			  penaltyBackward*=wrongYPenalty;
 				NAMED_DEBUG("PENALTY",cout << "clustering with backward jet disfavoured because of rapidity " << endl;)
+			  preferForward=true;
 		  } else {
-			  penaltyForward*=1e24;
+			  penaltyForward*=wrongYPenalty;
 				NAMED_DEBUG("PENALTY",cout << "clustering with forward jet disfavoured because of rapidity " << endl;)
+			  preferForward=false;
 		  }
 		  if (ff.is_multiflavored() ){  // || (ff.is_flavorless() && !beam_flavour.forward.is_flavorless() )){   // it is ok to merge gluons into gluon
 			  penaltyForward*=1e27;
@@ -263,25 +273,51 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 
 			}
 
-
-		  NAMED_DEBUG("BEAM_CLUSTERING",cout << "considering forward merge: diB("<<jetIndex1<<") = " << diB << " penalty: " << penaltyForward <<endl;)
-		  NAMED_DEBUG("BEAM_CLUSTERING",cout << "forward beam flavor " << beam_flavour.forward.description()	 << endl;)
-		  NAMED_DEBUG("BEAM_CLUSTERING",cout << "projected flavor forward: " << ff.description() << endl;)
-		  if (diB2*penaltyForward<minDistance && penaltyForward <= penaltyBackward ){ // at least one of the two has the penalty for the wrong y direction
+			bool clusterForward=false ,clusterBackward=false;
+			if (wrongYPenalty==1){
+				  NAMED_DEBUG("BEAM_CLUSTERING",cout << "considering forward merge: diB("<<jetIndex1<<") = " << diB << " penalty: " << penaltyForward <<endl;)
+				  NAMED_DEBUG("BEAM_CLUSTERING",cout << "forward beam flavor " << beam_flavour.forward.description()	 << endl;)
+				  NAMED_DEBUG("BEAM_CLUSTERING",cout << "projected flavor forward: " << ff.description() << endl;)
+				  NAMED_DEBUG("BEAM_CLUSTERING",cout << "considering backward diB("<<jetIndex1<<") = " << diB << " penalty: " << penaltyBackward <<endl;)
+				  NAMED_DEBUG("BEAM_CLUSTERING",cout << "backward beam flavor " << beam_flavour.backward.description()	 << endl;)
+				  NAMED_DEBUG("BEAM_CLUSTERING",cout << "projected flavor backward: " << fb.description() << endl;)
+				  if ((penaltyForward==penaltyBackward) && diB2*penaltyForward<minDistance ){
+					  if (preferForward){ clusterForward=true;} else {clusterBackward=true;}
+				  } else {
+					  if (diB2*penaltyForward<minDistance && penaltyForward <= penaltyBackward ){
+						  clusterForward=true;
+					  }
+					  if (diB2*penaltyBackward<minDistance && penaltyForward >= penaltyBackward){
+						  clusterBackward=true;
+					  }
+				  }
+			} else {
+			  NAMED_DEBUG("BEAM_CLUSTERING",cout << "considering forward merge: diB("<<jetIndex1<<") = " << diB << " penalty: " << penaltyForward <<endl;)
+			  NAMED_DEBUG("BEAM_CLUSTERING",cout << "forward beam flavor " << beam_flavour.forward.description()	 << endl;)
+			  NAMED_DEBUG("BEAM_CLUSTERING",cout << "projected flavor forward: " << ff.description() << endl;)
+			  if (diB2*penaltyForward<minDistance && penaltyForward <= penaltyBackward ){ // at least one of the two has the penalty for the wrong y direction
+				  clusterForward=true;
+			  }
+			  NAMED_DEBUG("BEAM_CLUSTERING",cout << "considering backward diB("<<jetIndex1<<") = " << diB << " penalty: " << penaltyBackward <<endl;)
+			  NAMED_DEBUG("BEAM_CLUSTERING",cout << "backward beam flavor " << beam_flavour.backward.description()	 << endl;)
+			  NAMED_DEBUG("BEAM_CLUSTERING",cout << "projected flavor backward: " << fb.description() << endl;)
+			  if (diB2*penaltyBackward<minDistance && penaltyForward >= penaltyBackward){
+				  clusterBackward=true;
+			  }
+			}
+		  if (clusterForward){
 			  minDistance=diB2*penaltyForward; // I can do this because I don't use this as the scale
 			  parent1=candidateIndex;
 			  parent2=-1;
 			  beam_index = 1;
 		  }
-		  NAMED_DEBUG("BEAM_CLUSTERING",cout << "considering backward diB("<<jetIndex1<<") = " << diB << " penalty: " << penaltyBackward <<endl;)
-		  NAMED_DEBUG("BEAM_CLUSTERING",cout << "backward beam flavor " << beam_flavour.backward.description()	 << endl;)
-		  NAMED_DEBUG("BEAM_CLUSTERING",cout << "projected flavor backward: " << fb.description() << endl;)
-		  if (diB2*penaltyBackward<minDistance && penaltyForward >= penaltyBackward){
+		  if (clusterBackward){
 			  minDistance=diB2*penaltyBackward;  // I can do this because I don't use this as the scale
 			  parent1=candidateIndex;
 			  parent2=-1;
 			  beam_index =-1;
 		  }
+
 
 		  for (int candidateIndex2=candidateIndex+1;candidateIndex2<candidates.size();candidateIndex2++){
 			  int index2=candidates[candidateIndex2];
@@ -361,10 +397,12 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 
 			  if (yjet>yCMF){
 				  NAMED_DEBUG("BEAM_CLUSTERING",cout << "Good, it is preferred to merge with forward jet. yjet=" << yjet << ">" << yCMF << "=yCMF"  << endl;)
-				} else {
+			  } else {
 				  NAMED_DEBUG("BEAM_CLUSTERING",cout << "would have preferred to merge with backward jet. yjet=" << yjet << "<" << yCMF << "=yCMF"  << endl;)
-						friendly=false;
-				};
+				if (_useRapidity){
+					friendly=false;
+				}
+			  };
 
 				cs.plugin_record_iB_recombination(jetIndex1, pt2);
 				beam_flavour.forward  = beam_flavour.forward  - flavour_of(j1);
