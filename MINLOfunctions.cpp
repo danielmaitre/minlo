@@ -554,7 +554,7 @@ double getSudakovFactor(
     double bornSub=EXPSUDAKOV(q02,scales_beamBackward[ii+1],scales_beamBackward[ii],pdg_beamBackward[ii] % 21 );
 		bornSubtraction+=bornSub;
 		NAMED_DEBUG("BEAM_SCALES",
-			cout << "need sudakov from high scale " << scales_beamBackward[ii+1] << " to scale " << scales_beamBackward[ii] << sudakov << endl;
+			cout << "need sudakov from high scale " << scales_beamBackward[ii+1] << " to scale " << scales_beamBackward[ii] << " pdg: " << pdg_beamBackward[ii] << " sudakov: "<< sudakov << endl;
    		cout << "born sudakov subtraction " << bornSub << endl;
  	  )
 	}
@@ -613,7 +613,7 @@ double getSudakovFactor(
 }
 
 
-double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLES>& Ev,double &q0,double &scaleForNLO,int &status,bool useNewNtupleFormat,bool useDouble) {
+double MINLOcomputeSudakovFn(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLES>& Ev,double &q0,double &scaleForNLO,int &status,bool useNewNtupleFormat,bool useDouble,double &sudakovFactor,double &alphasFactor) {
 
 	std::vector<fastjet::PseudoJet> input_particles;
 
@@ -752,14 +752,14 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 	vector<double> scales;
 	double subtraction;
 	double Qlocal; // the scale of the core process after doing the clusterings that are allowed
-	double sfactor=getSudakovFactor(cs,MI,scales,Qlocal,q0,shat,subtraction,status,basicProcess,nonPartons,isReal);
-	NAMED_DEBUG("SUDAKOV_FACTOR",cout << "Factor from sudakovs: " << sfactor << endl;)
+	sudakovFactor=getSudakovFactor(cs,MI,scales,Qlocal,q0,shat,subtraction,status,basicProcess,nonPartons,isReal);
+	NAMED_DEBUG("SUDAKOV_FACTOR",cout << "Factor from sudakovs: " << sudakovFactor << endl;)
 	NAMED_DEBUG("SUDAKOV_FACTOR",cout << "born subtraction: " << subtraction << endl;)
 	NAMED_DEBUG("ALPHAS_SCALES",cout << "number of clustering scales: " << scales.size();
 		for (int si=0; si<scales.size();si++){ cout << " " << scales[si]; }; cout << endl
 	)
 	double oldAlpha=Ev.alphas;
-	double alphaFactor=1;
+	alphasFactor=1;
 	double alphaFactorNum=1;
 	double alphaFactorDen=1;
 	double sumAlpha=0;
@@ -768,9 +768,9 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 	for (int i =0; i<scales.size();i++){
 		newAlpha=getAlphasQ(scales[i],MI);
 		NAMED_DEBUG("ALPHAS_SCALES",cout << "alphas from clustering scale "<< scales[i] << ": "<< newAlpha << endl;)
-		alphaFactor/=oldAlpha;
+		alphasFactor/=oldAlpha;
 		alphaFactorDen*=oldAlpha;
-		alphaFactor*=newAlpha;
+		alphasFactor*=newAlpha;
 		alphaFactorNum*=newAlpha;
 		sumAlpha+=newAlpha;
 		scaleProduct*=max(scales[i],minRenScale);
@@ -779,18 +779,18 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 	for (int i =1;i<=MI.d_njetsClus+MI.d_njetsOrig-scales.size();i++){
 		newAlpha=getAlphasQ(Qlocal,MI);
 		NAMED_DEBUG("ALPHAS_SCALES",cout << "alphas from primary process scale "<< Qlocal << ": "<< newAlpha << endl;)
-		alphaFactor/=oldAlpha;
+		alphasFactor/=oldAlpha;
 		alphaFactorDen*=oldAlpha;
-		alphaFactor*=newAlpha;
+		alphasFactor*=newAlpha;
 		alphaFactorNum*=newAlpha;
 		sumAlpha+=newAlpha;
 		scaleProduct*=Qlocal;
 	}
 	double alphaForNLO=sumAlpha/double(MI.d_njetsOrig);
 	if (MI.d_type==MinloInfo::nlo || MI.d_type==MinloInfo::real ){
-		alphaFactor/=oldAlpha;
+		alphasFactor/=oldAlpha;
 		alphaFactorDen*=oldAlpha;
-		alphaFactor*=alphaForNLO;
+		alphasFactor*=alphaForNLO;
 		alphaFactorNum*=alphaForNLO;
 	}
 	if (MI.d_scaleMode==MinloInfo::geometric){
@@ -799,34 +799,45 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 	static QofAlphasInterpolated* QoA=new QofAlphasInterpolated();
 
 	if (MI.d_scaleMode==MinloInfo::inverseAlpha){
-		double effectiveAlphasNoSudakov=exp(log(alphaFactor)/double(MI.d_njetsOrig))*oldAlpha;
+		double effectiveAlphasNoSudakov=exp(log(alphasFactor)/double(MI.d_njetsOrig))*oldAlpha;
 		scaleForNLO=(*QoA)(effectiveAlphasNoSudakov);
 	}
 
 	NAMED_DEBUG("ALPHAS_SCALES",cout <<"scale for NLO: " << scaleForNLO <<  endl;)
 	NAMED_DEBUG("ALPHAS_SCALES",cout <<"ME scale: " << Q <<  " original: "<< Ev.muR << endl;)
-	NAMED_DEBUG("ALPHAS_SCALES",cout <<"alphas factor: " << alphaFactor <<  endl;)
+	NAMED_DEBUG("ALPHAS_SCALES",cout <<"alphas factor: " << alphasFactor <<  endl;)
 	NAMED_DEBUG("ALPHAS_SCALES",cout <<"alphas factor (numerator): " << alphaFactorNum <<  endl;)
 	NAMED_DEBUG("ALPHAS_SCALES",cout <<"alphas factor (denominator): " << alphaFactorDen <<  endl;)
 
 	if (MI.d_type==MinloInfo::born){
 		double b0=(33-2*5)/12.0/3.14159265358979323846264;
 		//double fullSubtraction= alphaForNLO*(subtraction+d_njetsOrig*b0*2*log(scaleForNLO/fixedScaleForNLO));
+		double beta0term;
+		if (MI.d_subtractBeta0term){
+			beta0term=MI.d_njetsOrig*b0*2*log(scaleForNLO/Ev.muR);
+		} else {
+			beta0term=0.0;
+		}
+
 		double fullSubtraction=
 			alphaForNLO*(
-				subtraction+MI.d_njetsOrig*b0*2*log(scaleForNLO/Ev.muR)
+				subtraction+beta0term
 				);
+		NAMED_DEBUG("SUBTRACTION",cout <<"subtraction: " << subtraction << " with alphas: " << alphaForNLO*subtraction << endl;)
+		NAMED_DEBUG("SUBTRACTION",cout <<"alphas for NLO: " << alphaForNLO <<  endl;)
+		NAMED_DEBUG("SUBTRACTION",cout <<"beta0 term : " << beta0term <<" with alphas: "<< alphaForNLO*beta0term<<  endl;)
+		NAMED_DEBUG("SUBTRACTION",cout <<"full subtraction: " << fullSubtraction <<  endl;)
 		double bornFactor=(1+fullSubtraction);
 		NAMED_DEBUG("ALPHAS_SCALES",cout <<"full subtraction: " << fullSubtraction <<  endl;)
 		NAMED_DEBUG("ALPHAS_SCALES",cout <<"full born factor: " << bornFactor <<  endl;)
-		NAMED_DEBUG("KEITH",cout << "To compare: basicfac: " << sfactor*alphaFactor << endl;)
+		NAMED_DEBUG("KEITH",cout << "To compare: basicfac: " << sudakovFactor*alphasFactor << endl;)
 		NAMED_DEBUG("KEITH",cout << "To compare: bornfac: " << bornFactor << endl;)
 		NAMED_DEBUG("KEITH",cout << "To compare: nlofac: " << alphaForNLO/oldAlpha << endl;)
 		NAMED_DEBUG("KEITH",cout << "To compare: st_mufac2: " << q0*q0 << endl;)
-		double factor=sfactor*alphaFactor*bornFactor;
+		double factor=sudakovFactor*alphasFactor*bornFactor;
 		NAMED_DEBUG("KEITH",cout << "To compare: weight: " << factor << endl;)
-		double effectiveAlphas=exp(log(sfactor*alphaFactor)/double(MI.d_njetsOrig))*oldAlpha;  // this spreads the factor to all alphas, not including the subtraction
-		minloImpl::g_MinloFactor=sfactor*alphaFactor;
+		double effectiveAlphas=exp(log(sudakovFactor*alphasFactor)/double(MI.d_njetsOrig))*oldAlpha;  // this spreads the factor to all alphas, not including the subtraction
+		minloImpl::g_MinloFactor=sudakovFactor*alphasFactor;
 		minloImpl::g_MinloScale=(*QoA)(effectiveAlphas);
 		minloImpl::g_MinloScaleValid=true;
 		return factor;
@@ -842,15 +853,22 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 			cout <<"full subtraction: " << fullSubtraction <<  endl;
 			cout <<"full born factor: " << bornFactor <<  endl;
 		)
-		NAMED_DEBUG("KEITH",cout << "To compare: basicfac: " << sfactor*(alphaFactor/nlofac) << endl;) // in this case my alphafactor include nlofac already, need to divide out to compare
+		NAMED_DEBUG("KEITH",cout << "To compare: basicfac: " << sudakovFactor*(alphasFactor/nlofac) << endl;) // in this case my alphafactor include nlofac already, need to divide out to compare
 		NAMED_DEBUG("KEITH",cout << "To compare: bornfac: " << bornFactor << endl;)
 		NAMED_DEBUG("KEITH",cout << "To compare: nlofac: " << nlofac << endl;)
 		NAMED_DEBUG("KEITH",cout << "To compare: st_mufac2: " << q0*q0 << endl;)
-		NAMED_DEBUG("KEITH",cout << "To compare: weight: " << sfactor*alphaFactor << endl;)
-		return sfactor*alphaFactor;
+		NAMED_DEBUG("KEITH",cout << "To compare: weight: " << sudakovFactor*alphasFactor << endl;)
+		return sudakovFactor*alphasFactor;
 	}
 
 }
+
+
+double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLES>& Ev,double &q0,double &scaleForNLO,int &status,bool useNewNtupleFormat,bool useDouble) {
+	double sudakovFactor,alphasFactor;
+	return MINLOcomputeSudakovFn(MI, Ev, q0, scaleForNLO, status, useNewNtupleFormat, useDouble, sudakovFactor, alphasFactor);
+}
+
 
 NtupleInfo<MAX_NBR_PARTICLES> boostedToCMF(const NtupleInfo<MAX_NBR_PARTICLES>& orig,bool useDouble){
 	NtupleInfo<MAX_NBR_PARTICLES> evb;

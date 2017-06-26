@@ -23,7 +23,7 @@ struct MinloInfo {
 	enum coreScaleChoice { shat, hthalf, stefan};
 	coreScaleChoice d_coreScaleType;
 	bool d_useRapidityInClustering;
-
+	bool d_subtractBeta0term;
 	void print(std::ostream& os) {
 		os << "njetsOrig  : " << d_njetsOrig << std::endl;
 		os << "njetsClus  : " << d_njetsClus << std::endl;
