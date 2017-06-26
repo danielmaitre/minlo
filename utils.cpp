@@ -70,6 +70,15 @@ std::string getStyle(const std::string& desc){
 				if (desc=="g (beam) "){
 					return "style=dotted";
 				} else {
+					if (desc=="u (beam) " or desc=="ubar (beam) " ){
+						return "style=solid,color=green";
+					}
+					if (desc=="d (beam) " or desc=="dbar (beam) " ){
+						return "style=solid,color=blue";
+					}
+					if (desc=="s (beam) " or desc=="sbar (beam) " ){
+						return "style=solid,color=magenta";
+					}
 					return "style=solid";
 				};
 }
@@ -79,6 +88,15 @@ std::string getStyle(int pdg){
 	if (pdg==21){
 		return "style=dotted";
 	} else {
+		if (pdg==1 or pdg==-1){
+			return "style=solid,color=blue";
+		}
+		if (pdg==2 or pdg==-2){
+			return "style=solid,color=green";
+		}
+		if (pdg==3 or pdg==-3){
+			return "style=solid,color=magenta";
+		}
 		return "style=solid";
 	};
 }
@@ -144,7 +162,7 @@ void displayClusterHistoryDot(fastjet::ClusterSequence& cs,std::ostream& os){
 				os << "// cluster with backward beam " << pdgFromFlavor(extras->beam_flav_backward(njetsCurrent))<<std::endl;
 		        os << "// backward beam before:" << extras->beam_flav_backward(njetsCurrent+1).description() << std::endl;
 			    os << "// backward beam now:" << extras->beam_flav_backward(njetsCurrent).description() << std::endl;
-				std::string beamstyle=getStyle(pdgFromFlavor(extras->beam_flav_backward(njetsCurrent)));
+				std::string beamstyle=getStyle(extras->beam_flav_backward(njetsCurrent).description()); //getStyle(pdgFromFlavor(extras->beam_flav_backward(njetsCurrent)));
 				std::string otherstyle=getStyleParent(cs,historyIndex);
 				os << historyIndex  << " -- " << backward<< " [" << beamstyle  <<",weight=0.5]"<< std::endl;
 				os << parent1 << " -- " << historyIndex << " ["<< otherstyle << "]" << std::endl;
@@ -163,8 +181,8 @@ void displayClusterHistoryDot(fastjet::ClusterSequence& cs,std::ostream& os){
 	}
 	os << "// connecting to the main process: " << std::endl ;
 
-			std::string beamstyleF=getStyle(extras->beam_flav_forward(0+1).description());
-			std::string beamstyleB=getStyle(extras->beam_flav_backward(0+1).description());
+			std::string beamstyleF=getStyle(extras->beam_flav_forward(0).description());
+			std::string beamstyleB=getStyle(extras->beam_flav_backward(0).description());
 			os << forward << " -- " << n << " [" << beamstyleF << ",weight=0.5]" << std::endl;
 			os << n << " -- " << backward << " ["<< beamstyleB << ",weight=0.5]" << std::endl;
 
