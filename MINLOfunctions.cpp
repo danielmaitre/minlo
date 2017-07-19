@@ -23,6 +23,8 @@
 #include "nll.h"
 #include "coreScales.h"
 
+#include <iomanip>
+
 using namespace std;
 
 #define myflavorPlugin
@@ -604,7 +606,7 @@ double getSudakovFactor(
         bornSubtraction+=bornSub;
     }
   	NAMED_DEBUG("SUBTRACTION",
-  		cout << "total born sudakov subtraction " << bornSubtraction << endl;
+  		cout << setprecision(15) << "total born sudakov subtraction " << bornSubtraction << endl;
     	cout <<"==========="<< endl;
   	)
   	status=nbrClusteringsDone;
@@ -823,11 +825,13 @@ double MINLOcomputeSudakovFn(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTIC
 			alphaForNLO*(
 				subtraction+beta0term
 				);
-		NAMED_DEBUG("SUBTRACTION",cout <<"subtraction: " << subtraction << " with alphas: " << alphaForNLO*subtraction << endl;)
+		NAMED_DEBUG("SUBTRACTION",cout <<"subtraction: " << -subtraction << " with alphas: " << -alphaForNLO*subtraction << endl;)
+		NAMED_DEBUG("SUBTRACTION",cout <<"old alphas: " << oldAlpha <<  endl;)
 		NAMED_DEBUG("SUBTRACTION",cout <<"alphas for NLO: " << alphaForNLO <<  endl;)
 		NAMED_DEBUG("SUBTRACTION",cout <<"beta0 term : " << beta0term <<" with alphas: "<< alphaForNLO*beta0term<<  endl;)
 		NAMED_DEBUG("SUBTRACTION",cout <<"full subtraction: " << fullSubtraction <<  endl;)
 		double bornFactor=(1+fullSubtraction);
+		NAMED_DEBUG("SUBTRACTION",cout <<"full subtraction with sudakov: " << sudakovFactor*(1+fullSubtraction) <<  endl;)
 		NAMED_DEBUG("ALPHAS_SCALES",cout <<"full subtraction: " << fullSubtraction <<  endl;)
 		NAMED_DEBUG("ALPHAS_SCALES",cout <<"full born factor: " << bornFactor <<  endl;)
 		NAMED_DEBUG("KEITH",cout << "To compare: basicfac: " << sudakovFactor*alphasFactor << endl;)
