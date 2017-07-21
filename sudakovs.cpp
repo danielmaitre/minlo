@@ -29,11 +29,12 @@ double Ggq(const double &e,const double &q2,double m=0.0)
   return 0.5/(q2+m*m)*sqr(1.0-e)*(1.0-(1.0-e)*(1.0+3.0*e)/3.0*q2/(q2+m*m));
 }
 
-double SherpaIntegrand(double q2,double Q2,char fl,LHAPDF::PDF* pdf,bool m_fo,int m_mode,double m_mur2){
+double SherpaIntegrand(double q2,double Q2,char fl,LHAPDF::PDF* pdf,bool m_fo,int m_mode,double m_mur2,int nfgs){
 	double eps(sqrt(q2/Q2));
 	double e((m_mode&1)?eps:0.0);
 	double as2pi=pdf->alphasQ2((m_fo?m_mur2:q2))/(2.0*M_PI);
-	double nf(pdf->alphaS().numFlavorsQ2(m_fo?m_mur2:q2));
+	int nf_pdf=pdf->alphaS().numFlavorsQ2(m_fo?m_mur2:q2);
+	double nf(nfgs<=nf_pdf?nfgs:nf_pdf);
 	if (fl=='q') {
 	  double gam=as2pi/q2*4.0/3.0*
 		(2.0*log(1.0/eps)*(1.0+as2pi*K(nf,m_fo,m_mode))
@@ -56,9 +57,9 @@ double SherpaIntegrand(double q2,double Q2,char fl,LHAPDF::PDF* pdf,bool m_fo,in
 	}
 	if (fl=='g') {
 	  double gam0=Ggq(e,q2), gam=3.0*gam0;
-	  for (long int i(4);i<=6;++i)
+	  for (long int i(4);i<=nfgs;++i){
 		if (false /*Flavour(i).Mass()*/) {/*gam+=Ggq(e,q2,Flavour(i).Mass());*/}
-		else if (nf>=i) gam+=gam0;
+		else if (nf>=i) gam+=gam0;}
 	  return as2pi/q2*3.0*
 		(2.0*log(1.0/eps)*(1.0+as2pi*K(nf,m_fo,m_mode))
 		 -sqr(1.0-e)/6.0*(11.0-e*(2.0-3.0*e)))
@@ -113,6 +114,9 @@ struct SherpaParams {
 	double Q2;
 	LHAPDF::PDF* pdf;
 	int mode;
+	bool fo;
+	int nfgs;
+	double q2ren;
 };
 
 double SherpaIntegrand(double q2,void *params,char fl){
@@ -121,9 +125,10 @@ double SherpaIntegrand(double q2,void *params,char fl){
 	LHAPDF::PDF* pdf =(*sp).pdf;
 	int mode=(*sp).mode;
 
-	bool fo=false;
-	double mur2=1.0;
-	return  SherpaIntegrand(q2,Q2,fl,pdf,fo,mode,mur2);
+	bool fo=(*sp).fo;
+	double mur2=(*sp).q2ren;
+	int nfgs=(*sp).nfgs;
+	return  SherpaIntegrand(q2,Q2,fl,pdf,fo,mode,mur2,nfgs);
 }
 
 double SherpaIntegrandQuark(double q2,void *params){
@@ -138,8 +143,8 @@ double myIntegrate(gsl_function *F,double ql,double qh){
 	int limit=5000;
 	static gsl_integration_workspace *wsp=gsl_integration_workspace_alloc(limit);
 
-	double epsabs=1e-6;
-	double epsrel=1e-6;
+	double epsabs=1e-9;
+	double epsrel=1e-9;
 	double result;
 	double abserror;
 	gsl_integration_qag (F, ql, qh, epsabs,epsrel, limit , GSL_INTEG_GAUSS21, wsp, &result, &abserror);
@@ -168,12 +173,14 @@ double KeithExponentGluon(double q02,double q2){
 
 }
 
-double SherpaExponentQuark(double q02, double q2,LHAPDF::PDF* pdf,int mode){
+double SherpaExponentQuark(double q02, double q2,LHAPDF::PDF* pdf,int mode,bool fo,int nfgs,double q2ren){
 	SherpaParams sp;
 	sp.Q2=q2;
 	sp.pdf=pdf;
 	sp.mode=mode;
-
+	sp.fo=fo;
+	sp.nfgs=nfgs;
+	sp.q2ren=q2ren;
 	gsl_function F;
 	F.function=&SherpaIntegrandQuark;
 	F.params=&sp;
@@ -182,11 +189,14 @@ double SherpaExponentQuark(double q02, double q2,LHAPDF::PDF* pdf,int mode){
 
 }
 
-double SherpaExponentGluon(double q02, double q2,LHAPDF::PDF* pdf,int mode){
+double SherpaExponentGluon(double q02, double q2,LHAPDF::PDF* pdf,int mode,bool fo,int nfgs,double q2ren){
 	SherpaParams sp;
 	sp.Q2=q2;
 	sp.pdf=pdf;
 	sp.mode=mode;
+	sp.fo=fo;
+	sp.nfgs=nfgs;
+	sp.q2ren=q2ren;
 
 	gsl_function F;
 	F.function=&SherpaIntegrandGluon;
@@ -196,14 +206,14 @@ double SherpaExponentGluon(double q02, double q2,LHAPDF::PDF* pdf,int mode){
 
 }
 
-double SherpaSudakov(double q20,double q2h,double q2l,int flav,LHAPDF::PDF* pdf ,int mode){
+double SherpaSudakov(double q20,double q2h,double q2l,int flav,LHAPDF::PDF* pdf ,int mode, int ngfs){
 	double num,den;
 	if (flav==0){
-		num=SherpaExponentGluon(q20,q2h,pdf,mode);
-		den=SherpaExponentGluon(q20,q2l,pdf,mode);
+		num=SherpaExponentGluon(q20,q2h,pdf,mode,false,ngfs,q2h /*not relevant*/);
+		den=SherpaExponentGluon(q20,q2l,pdf,mode,false,ngfs,q2h /*not relevant*/);
 	} else {
-		num=SherpaExponentQuark(q20,q2h,pdf,mode);
-		den=SherpaExponentQuark(q20,q2l,pdf,mode);
+		num=SherpaExponentQuark(q20,q2h,pdf,mode,false,ngfs,q2h /*not relevant*/);
+		den=SherpaExponentQuark(q20,q2l,pdf,mode,false,ngfs,q2h /*not relevant*/);
 	}
 	return exp(num-den);
 }

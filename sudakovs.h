@@ -17,10 +17,10 @@ double K(const double &nf,bool m_fo,int m_mode);
 double KeithExponentQuark(double q02,double q2);
 double KeithExponentGluon(double q02,double q2);
 
-double SherpaExponentQuark(double q02, double q2,LHAPDF::PDF* pdf,int mode);
-double SherpaExponentGluon(double q02, double q2,LHAPDF::PDF* pdf,int mode);
+double SherpaExponentQuark(double q02, double q2,LHAPDF::PDF* pdf,int mode,bool fo,int nfgs,double q2ren);
+double SherpaExponentGluon(double q02, double q2,LHAPDF::PDF* pdf,int mode,bool fo,int nfgs,double q2ren);
 
-double SherpaSudakov(double q20,double q2h,double q2l,int flav,LHAPDF::PDF* pdf ,int mode);
+double SherpaSudakov(double q20,double q2h,double q2l,int flav,LHAPDF::PDF* pdf ,int mode,int ngfs=6);
 double KeithSudakov(double q20,double q2h,double q2l,int flav,LHAPDF::PDF* pdf);
 
 double alphasKeith(double Q2,int nf=5,double lambda2=0.226*0.226);

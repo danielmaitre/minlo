@@ -36,6 +36,7 @@ void MinloInfo::readFromStream(std::istream& is){
 	("minlo.sherpaMode", po::value<int>()->default_value(3), "mode for sherpa sudakov")
 	("minlo.useRapidityInClustering", po::value<bool>()->default_value(true), "use rapidity in clustering")
 	("minlo.subtractBeta0term", po::value<bool>()->default_value(true), "subtract beta0 term")
+	("minlo.nfgs", po::value<int>()->default_value(6), "nf in gluon splitting for the sudakov")
 	;
 
 
@@ -72,7 +73,7 @@ void MinloInfo::readFromStream(std::istream& is){
 	d_sherpaMode=vm["minlo.sherpaMode"].as<int>();
 	d_useRapidityInClustering=vm["minlo.useRapidityInClustering"].as<bool>();
 	d_subtractBeta0term=vm["minlo.subtractBeta0term"].as<bool>();
-
+	d_nfgs=vm["minlo.nfgs"].as<int>();
 
 	if ( vm["minlo.scaleMode"].as<std::string>() == "geometric"){
 		d_scaleMode=MinloInfo::geometric;

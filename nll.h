@@ -12,6 +12,7 @@
 
 double nll_sudakov_withInfo(const MinloInfo& MI,const  double &q20,const double &q2h,const double &q2l,const int &flav);
 double nll_exponent_withInfo(const MinloInfo& MI,const  double &q20,const double &q2h,const double &q2l,const int &flav);
+double fo_exponent_withInfo(const MinloInfo& MI,const  double &q20,const double &q2h,const double &q2l,const double &q2ren,const int &flav);
 
 
 
