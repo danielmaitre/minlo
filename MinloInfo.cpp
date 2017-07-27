@@ -37,6 +37,8 @@ void MinloInfo::readFromStream(std::istream& is){
 	("minlo.useRapidityInClustering", po::value<bool>()->default_value(true), "use rapidity in clustering")
 	("minlo.subtractBeta0term", po::value<bool>()->default_value(true), "subtract beta0 term")
 	("minlo.nfgs", po::value<int>()->default_value(6), "nf in gluon splitting for the sudakov")
+	("minlo.useMinloAlphaReceipeForSubtraction", po::value<bool>()->default_value(true), "use the arithmetic average of the alphas as the alphas multiplying the subtraction (only affects sherpaMode=2,3)")
+	("minlo.useAnalyticalSherpa", po::value<bool>()->default_value(false), "use the analytically integrated sudakovs)")
 	;
 
 
@@ -74,7 +76,8 @@ void MinloInfo::readFromStream(std::istream& is){
 	d_useRapidityInClustering=vm["minlo.useRapidityInClustering"].as<bool>();
 	d_subtractBeta0term=vm["minlo.subtractBeta0term"].as<bool>();
 	d_nfgs=vm["minlo.nfgs"].as<int>();
-
+	d_useMinloAlphaReceipeForSubtraction=vm["useMinloAlphaReceipeForSubtraction"].as<bool>();
+	d_useAnalyticalSherpa=vm["useAnalyticalSherpa"].as<bool>();
 	if ( vm["minlo.scaleMode"].as<std::string>() == "geometric"){
 		d_scaleMode=MinloInfo::geometric;
 	} else if ( vm["minlo.scaleMode"].as<std::string>() == "inverseAlpha"){

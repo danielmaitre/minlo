@@ -4,9 +4,9 @@ F77=gfortran
 
 ACLOCAL_AMFLAGS = -I m4
 
-bin_PROGRAMS= run
+bin_PROGRAMS= run ExpIntegralTest 
 run_SOURCES = run.cpp
-
+ExpIntegralTest_SOURCES = ExpIntegralTest.cpp
 
 lib_LTLIBRARIES=libMINLOlib.la 
 
@@ -22,7 +22,8 @@ libMINLOlib_la_SOURCES = \
 	sudakovs.cpp sudakovs.h \
 	MinloInfo.h MinloInfo.cpp \
 	nll.h nll.cpp \
-	coreScales.cpp coreScales.h
+	coreScales.cpp coreScales.h\
+	ExpIntegral.cpp ExpIntegral.h
 
 AM_LDFLAGS =  $(FASTJET_LDFLAGS) $(LHAPDF_LDFLAGS) 
 AM_LDFLAGS += $(ROOT_LIBS)
@@ -41,6 +42,9 @@ run_LDFLAGS = $(NTUPLEREADER_LDFLAGS) $(FASTJET_CXXFLAGS) $(LHAPDF_CXXFLAGS) $(B
 run_LDFLAGS += $(ROOT_LIBS)
 run_LDADD = libMINLOlib.la MyFlavKtPlugin/libMyCluster.la  $(FASTJET_LDFLAGS)
 
+ExpIntegralTest_LDFLAGS = $(NTUPLEREADER_LDFLAGS) $(FASTJET_CXXFLAGS) $(LHAPDF_CXXFLAGS) $(BOOST_LDFLAGS)
+ExpIntegralTest_LDFLAGS += $(ROOT_LIBS)
+ExpIntegralTest_LDADD = libMINLOlib.la 
 
 
 AM_CPPFLAGS += $(PYTHON_INCLUDE) -I$(PYTHON_INCLUDE_DIR) $(NTUPLEREADER_CPPFLAGS) $(ROOT_CPPFLAGS)

@@ -25,6 +25,8 @@ struct MinloInfo {
 	bool d_useRapidityInClustering;
 	bool d_subtractBeta0term;
 	int d_nfgs;
+	bool d_useMinloAlphaReceipeForSubtraction;
+	bool d_useAnalyticalSherpa;
 
 	void print(std::ostream& os) {
 		os << "njetsOrig  : " << d_njetsOrig << std::endl;

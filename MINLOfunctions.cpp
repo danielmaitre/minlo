@@ -177,7 +177,7 @@ void computeSudakov(const MinloInfo& MI,double highScale,double lowScale,double 
 			cout << "This gives a sudakov factor of " << sudakov << endl; cout << "born LL sudakov subtraction " << bornSub << std::endl;)
 }
 
-void calculateScaleAndAlphasFactor(const MinloInfo& MI,double Qlocal,double oldAlpha,double &alphasFactor,double& alphaForNLO,double &scaleForNLO,const std::vector<double>& scales){
+void calculateScaleAndAlphasFactor(const MinloInfo& MI,double Qlocal,double oldAlpha,double &alphasFactor,double& alphaForNLO,double &scaleForNLO,double &alphaAtScaleForNLO,const std::vector<double>& scales){
 	alphasFactor=1;
 	double alphaFactorNum=1;
 	double alphaFactorDen=1;
@@ -221,6 +221,7 @@ void calculateScaleAndAlphasFactor(const MinloInfo& MI,double Qlocal,double oldA
 		double effectiveAlphasNoSudakov=exp(log(alphasFactor)/double(MI.d_njetsOrig))*oldAlpha;
 		scaleForNLO=(*QoA)(effectiveAlphasNoSudakov);
 	}
+	alphaAtScaleForNLO=getAlphasQ(scaleForNLO,MI);
 
 	NAMED_DEBUG("ALPHAS_SCALES",cout <<"scale for NLO: " << scaleForNLO <<  endl;)
 	NAMED_DEBUG("ALPHAS_SCALES",cout <<"alphas factor: " << alphasFactor <<  endl;)
@@ -245,6 +246,7 @@ double getSudakovFactor(
 		double& alphasFactor,
 		double& alphaForNLO,
 		double& scaleForNLO,
+		double& alphaAtScaleForNLO,
 		bool isReal=false
 	){
 
@@ -533,7 +535,7 @@ double getSudakovFactor(
 		}
 	)
 
-	calculateScaleAndAlphasFactor(MI,Qlocal,oldAlpha,alphasFactor,alphaForNLO,scaleForNLO,clusteringScales);
+	calculateScaleAndAlphasFactor(MI,Qlocal,oldAlpha,alphasFactor,alphaForNLO,scaleForNLO,alphaAtScaleForNLO,clusteringScales);
 
 	// need to do this here because I need to know the core scale
 	for (int isc=0;isc<scalesConnectedToCoreProcess.size();isc++){
@@ -815,7 +817,7 @@ double MINLOcomputeSudakovFn(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTIC
 	vector<double> scales;
 	double subtraction;
 	double Qlocal; // the scale of the core process after doing the clusterings that are allowed
-	double alphaForNLO;
+	double alphaForNLO,alphaAtScaleForNLO;
 	double oldAlpha=Ev.alphas;
 
 	sudakovFactor=getSudakovFactor(
@@ -833,6 +835,7 @@ double MINLOcomputeSudakovFn(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTIC
 			alphasFactor,
 			alphaForNLO,
 			scaleForNLO,
+			alphaAtScaleForNLO,
 			isReal);
 	NAMED_DEBUG("SUDAKOV_FACTOR",cout << "Factor from sudakovs: " << sudakovFactor << endl;)
 	NAMED_DEBUG("SUDAKOV_FACTOR",cout << "born subtraction: " << subtraction << endl;)
@@ -854,7 +857,7 @@ double MINLOcomputeSudakovFn(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTIC
 		double fullSubtraction;
 		if (MI.d_useSherpa){// Sherpa's exponents have alphas included
 			fullSubtraction=
-					subtraction+alphaForNLO*beta0term;
+					alphaForNLO/alphaAtScaleForNLO*subtraction+alphaForNLO*beta0term;
 		} else {
 			fullSubtraction=alphaForNLO*(
 					subtraction+beta0term
@@ -863,6 +866,7 @@ double MINLOcomputeSudakovFn(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTIC
 		}
 
 		NAMED_DEBUG("SUBTRACTION",cout <<"subtraction: " << -subtraction << " with alphas: " << -alphaForNLO*subtraction << endl;)
+		NAMED_DEBUG("SUBTRACTION",cout <<"subtraction with correction: " << -alphaForNLO/alphaAtScaleForNLO*subtraction << endl;)
 		NAMED_DEBUG("SUBTRACTION",cout <<"old alphas: " << oldAlpha <<  endl;)
 		NAMED_DEBUG("SUBTRACTION",cout <<"alphas for NLO: " << alphaForNLO <<  endl;)
 		NAMED_DEBUG("SUBTRACTION",cout <<"beta0 term : " << beta0term <<" with alphas: "<< alphaForNLO*beta0term<<  endl;)

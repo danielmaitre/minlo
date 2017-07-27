@@ -143,8 +143,8 @@ double myIntegrate(gsl_function *F,double ql,double qh){
 	int limit=5000;
 	static gsl_integration_workspace *wsp=gsl_integration_workspace_alloc(limit);
 
-	double epsabs=1e-9;
-	double epsrel=1e-9;
+	double epsabs=1e-8;
+	double epsrel=1e-8;
 	double result;
 	double abserror;
 	gsl_integration_qag (F, ql, qh, epsabs,epsrel, limit , GSL_INTEG_GAUSS21, wsp, &result, &abserror);
