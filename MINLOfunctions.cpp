@@ -168,7 +168,11 @@ void computeSudakov(const MinloInfo& MI,double highScale,double lowScale,double 
 		//sudakov=lo_sudakov(q02,highScale,lowScale,f % 21 );
 		sudakov = nll_sudakov_withInfo(MI,q02, highScale, lowScale,
 				flavor % 21);
-		bornSub = fo_exponent_withInfo(MI,q02, highScale, lowScale,scaleForNLO*scaleForNLO , flavor % 21);
+		if (MI.d_type==MinloInfo::born){
+			bornSub = fo_exponent_withInfo(MI,q02, highScale, lowScale,scaleForNLO*scaleForNLO , flavor % 21);
+		} else {
+			bornSub=0;
+		}
 	} else {
 		sudakov = 1;
 		bornSub = 0;
@@ -539,12 +543,14 @@ double getSudakovFactor(
 
 	// need to do this here because I need to know the core scale
 	for (int isc=0;isc<scalesConnectedToCoreProcess.size();isc++){
-    sudakovCandidate& sc=scalesConnectedToCoreProcess[isc];
+		sudakovCandidate& sc=scalesConnectedToCoreProcess[isc];
 		double sudakov,bornSub;//,bornSubNLL;
 		computeSudakov(MI,Qlocal2,sc.lowScale,q02,scaleForNLO,sc.flavor,sudakov,bornSub);
-    factor*=sudakov;
-    // Keith says we should use the LL one
-    bornSubtraction+=bornSub;
+		factor*=sudakov;
+		// Keith says we should use the LL one
+		if (MI.d_type==MinloInfo::born){
+			bornSubtraction+=bornSub;
+		}
 	}
 
 	for (int isc=0;isc<sudakovCandidates.size();isc++){
@@ -558,9 +564,11 @@ double getSudakovFactor(
 			//highScale=sc.highScale;
 		}
 		computeSudakov(MI,highScale,sc.lowScale,q02,scaleForNLO,sc.flavor,sudakov,bornSub);
-    factor*=sudakov;
-    // Keith says we should use the LL one
-    bornSubtraction+=bornSub;
+		factor*=sudakov;
+		// Keith says we should use the LL one
+		if (MI.d_type==MinloInfo::born){
+			bornSubtraction+=bornSub;
+		}
 	}
 
 
@@ -602,23 +610,28 @@ double getSudakovFactor(
 	for (int ii=0;ii<scales_beamForward.size()-1;ii++){
   	double sudakov=nll_sudakov_withInfo(MI,q02,scales_beamForward[ii+1],scales_beamForward[ii],pdg_beamForward[ii] % 21 );
     factor*=sudakov;
-    double bornSub=fo_exponent_withInfo(MI,q02,scales_beamForward[ii+1],scales_beamForward[ii],scaleForNLO*scaleForNLO,pdg_beamForward[ii] % 21 );
-    bornSubtraction+=bornSub;
-  	NAMED_DEBUG("BEAM_SCALES",
-  		cout << "need sudakov " << sudakov << endl;
-    	cout << "born sudakov subtraction " << bornSub << endl;
-  	)
+    if (MI.d_type==MinloInfo::born){
+    	double bornSub=fo_exponent_withInfo(MI,q02,scales_beamForward[ii+1],scales_beamForward[ii],scaleForNLO*scaleForNLO,pdg_beamForward[ii] % 21 );
+    	bornSubtraction+=bornSub;
+    	NAMED_DEBUG("BEAM_SCALES",
+    			cout << "need sudakov " << sudakov << endl;
+    		cout << "born sudakov subtraction " << bornSub << endl;
+    	)
+    }
   }
   NAMED_DEBUG("BEAM_SCALES",    cout << "~~~~~"<< endl;)
   for (int ii=0;ii<scales_beamBackward.size()-1;ii++){
-   	double sudakov=nll_sudakov_withInfo(MI,q02,scales_beamBackward[ii+1],scales_beamBackward[ii],pdg_beamBackward[ii] % 21);
-		factor*=sudakov;
-    double bornSub=fo_exponent_withInfo(MI,q02,scales_beamBackward[ii+1],scales_beamBackward[ii],scaleForNLO*scaleForNLO,pdg_beamBackward[ii] % 21 );
-		bornSubtraction+=bornSub;
-		NAMED_DEBUG("BEAM_SCALES",
-			cout << "need sudakov from high scale " << scales_beamBackward[ii+1] << " to scale " << scales_beamBackward[ii] << " pdg: " << pdg_beamBackward[ii] << " sudakov: "<< sudakov << endl;
-   		cout << "born sudakov subtraction " << bornSub << endl;
- 	  )
+	  double sudakov=nll_sudakov_withInfo(MI,q02,scales_beamBackward[ii+1],scales_beamBackward[ii],pdg_beamBackward[ii] % 21);
+	  factor*=sudakov;
+	  if (MI.d_type==MinloInfo::born){
+		  double bornSub=fo_exponent_withInfo(MI,q02,scales_beamBackward[ii+1],scales_beamBackward[ii],scaleForNLO*scaleForNLO,pdg_beamBackward[ii] % 21 );
+		  bornSubtraction+=bornSub;
+
+		  NAMED_DEBUG("BEAM_SCALES",
+				  cout << "need sudakov from high scale " << scales_beamBackward[ii+1] << " to scale " << scales_beamBackward[ii] << " pdg: " << pdg_beamBackward[ii] << " sudakov: "<< sudakov << endl;
+   				cout << "born sudakov subtraction " << bornSub << endl;
+		  )
+	  }
 	}
  	NAMED_DEBUG("EXTERNAL_FACTORS",
     cout << " --- external factors ---- " << endl;
@@ -654,7 +667,11 @@ double getSudakovFactor(
         } else {
         	if (highScale2>q02){
             	sudakov=nll_sudakov_withInfo(MI,q02,highScale2,q02,f % 21 );
-                bornSub=fo_exponent_withInfo(MI,q02,highScale2,q02,scaleForNLO*scaleForNLO,f % 21 );
+            	if (MI.d_type==MinloInfo::born){
+            		bornSub=fo_exponent_withInfo(MI,q02,highScale2,q02,scaleForNLO*scaleForNLO,f % 21 );
+            	} else {
+            		bornSub=0;
+            	}
         	} else {
                 sudakov=1;
                 bornSub=0;
@@ -681,7 +698,7 @@ double MINLOcomputeSudakovFn(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTIC
 
 	std::vector<fastjet::PseudoJet> input_particles;
 
-	NtupleInfo<MAX_NBR_PARTICLES> evb=boostedToCMF(Ev,useDouble);
+	NtupleInfo<MAX_NBR_PARTICLES> evb=boostedToCMF(Ev,MI.d_energy,useDouble);
 	NAMED_DEBUG("BOOST", std::cout << "Reconstructed beam energy:" << getBeamEnergy(evb,useDouble) << std::endl; )
 
 	fastjet::PseudoJet beam1(0, 0, +MI.d_energy*evb.x1, MI.d_energy*evb.x1);
@@ -792,9 +809,11 @@ double MINLOcomputeSudakovFn(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTIC
 			nonPartons[iMom].Boost(boostVec[0],boostVec[1],boostVec[2]);
 		}
 		extras->getISRxyboost(&boostVec[0]);
-		basicProcess.Boost(boostVec[0],boostVec[1],boostVec[2]);
-		for (int iMom=0;iMom<nonPartons.size();iMom++){
-			nonPartons[iMom].Boost(boostVec[0],boostVec[1],boostVec[2]);
+		if (not(boostVec[0]==0.0 and boostVec[1]==0.0 and boostVec[2]==0.0)){
+			basicProcess.Boost(boostVec[0],boostVec[1],boostVec[2]);
+			for (int iMom=0;iMom<nonPartons.size();iMom++){
+				nonPartons[iMom].Boost(boostVec[0],boostVec[1],boostVec[2]);
+			}
 		}
 		NAMED_DEBUG("CORE_PROCESS_SCALE",
 			std::cout << "core process vector after boost: " << basicProcess.E() <<" " << basicProcess.X() << " " << basicProcess.Y() << " " <<  basicProcess.Z() << std::endl;
@@ -890,17 +909,11 @@ double MINLOcomputeSudakovFn(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTIC
 
 		//return sfactor*alphaFactor*(1-alphaForNLO*subtraction);
 	} else {
-		double b0=(33-2*5)/12.0/3.14159265358979323846264;
-		double fullSubtraction= alphaForNLO*(subtraction+MI.d_njetsOrig*b0*2*log(scaleForNLO/Ev.muR));
-		double bornFactor=(1+fullSubtraction);
 		double nlofac=alphaForNLO/oldAlpha;
+		NAMED_DEBUG("SUBTRACTION",cout <<"old alphas: " << oldAlpha <<  endl;)
+		NAMED_DEBUG("SUBTRACTION",cout <<"alphas for NLO: " << alphaForNLO <<  endl;)
 
-		NAMED_DEBUG("ALPHAS_SCALES",
-			cout <<"full subtraction: " << fullSubtraction <<  endl;
-			cout <<"full born factor: " << bornFactor <<  endl;
-		)
 		NAMED_DEBUG("KEITH",cout << "To compare: basicfac: " << sudakovFactor*(alphasFactor/nlofac) << endl;) // in this case my alphafactor include nlofac already, need to divide out to compare
-		NAMED_DEBUG("KEITH",cout << "To compare: bornfac: " << bornFactor << endl;)
 		NAMED_DEBUG("KEITH",cout << "To compare: nlofac: " << nlofac << endl;)
 		NAMED_DEBUG("KEITH",cout << "To compare: st_mufac2: " << q0*q0 << endl;)
 		NAMED_DEBUG("KEITH",cout << "To compare: weight: " << sudakovFactor*alphasFactor << endl;)
@@ -916,12 +929,34 @@ double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLE
 }
 
 
-NtupleInfo<MAX_NBR_PARTICLES> boostedToCMF(const NtupleInfo<MAX_NBR_PARTICLES>& orig,bool useDouble){
+void getX1X2(const NtupleInfo<MAX_NBR_PARTICLES>& orig,double& x1,double &x2,double Ebeam,bool useDouble){
+	double pz=0.0;
+	double E=0.0;
+	for (int ipart=0;ipart<orig.nparticle;ipart++){
+		if (useDouble){
+			pz+=orig.pzD[ipart];
+			E +=orig.ED[ipart];
+		} else {
+			pz+=orig.pz[ipart];
+			E +=orig.E[ipart];
+		}
+	}
+
+	x1=(E+pz)/(2*Ebeam);
+	x2=(E-pz)/(2*Ebeam);
+}
+
+
+NtupleInfo<MAX_NBR_PARTICLES> boostedToCMF(const NtupleInfo<MAX_NBR_PARTICLES>& orig,double Ebeam,bool useDouble){
 	NtupleInfo<MAX_NBR_PARTICLES> evb;
 	evb.nparticle=orig.nparticle;
 
-	double LabEx=(orig.x1+orig.x2);
-	double Labzx=(orig.x1-orig.x2);
+	double x1,x2;
+	getX1X2(orig,x1,x2,Ebeam,useDouble);
+
+
+	double LabEx=(x1+x2);
+	double Labzx=(x1-x2);
 	double beta=-Labzx/LabEx;
 	double ECMFx=sqrt(orig.x1*orig.x2);
 	std::vector<TLorentzVector> boostedVectors;

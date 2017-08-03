@@ -87,6 +87,68 @@ void ISRboost(fastjet::PseudoJet& bj1,fastjet::PseudoJet& bj2,
 
 }
 
+void ISRboostSimple(fastjet::PseudoJet& bj1,fastjet::PseudoJet& bj2,
+				const fastjet::PseudoJet& j1,
+				const vector<int>& candidates,
+				fastjet::ClusterSequence & cs,
+				const vector<int>& beam_particles,
+				double* boostzVec,double *boostxyVec
+				){
+
+	double LabE=bj1.E()+bj2.E()-j1.E();
+	double Labz=(bj1.pz()+bj2.pz())-j1.pz();
+	double labS=LabE*LabE-Labz*Labz;
+	double beta=-Labz/LabE;
+	boostxyVec[0]=0;boostxyVec[1]=0;boostxyVec[2]=0;
+
+	NAMED_DEBUG("BOOST",
+			std::cout << setw(12) << "pt" << setw(12) << "rapidity" << setw(12) << "phi" << "  flav" << std::endl;
+	)
+			for (int ic=0;ic<candidates.size();ic++){
+				int jetIndex=candidates[ic];
+				const fastjet::PseudoJet& jc=cs.jets()[jetIndex];
+				NAMED_DEBUG("BOOST",std::cout << "Jet before boost: " << jc  << std::endl; );
+				fastjet::PseudoJet& j=const_cast<fastjet::PseudoJet&>(jc);
+				TLorentzVector bm(j.px(),j.py(),j.pz(),j.E());
+				NAMED_DEBUG("BOOST",std::cout << "Before boosts: " << bm  << std::endl; );
+				bm.Boost(0,0,beta);
+				NAMED_DEBUG("BOOST",std::cout << "After z boost: " << bm  << std::endl; );
+				j.reset_momentum(bm.X(),bm.Y(),bm.Z(),bm.E());
+				NAMED_DEBUG("BOOST",std::cout << "Jet after boost: " << cs.jets()[jetIndex]  << std::endl; );
+			}
+			NAMED_DEBUG("BOOST",std::cout << "Now boosting the beam particles" << std::endl; );
+
+			double pz[]={0,0};
+			for (int iib=0;iib<2;iib++){
+				int jetIndex=beam_particles[iib];
+				const fastjet::PseudoJet& jc=cs.jets()[jetIndex];
+
+				fastjet::PseudoJet& j=const_cast<fastjet::PseudoJet&>(jc);
+				TLorentzVector bm(j.px(),j.py(),j.pz(),j.E());
+				NAMED_DEBUG("BOOST",std::cout << "Beam jet before boost: " << bm  << std::endl; );
+				bm.Boost(0,0,beta);
+				pz[iib]=bm.E();
+				NAMED_DEBUG("BOOST",std::cout << "Beam Jet after z boost: " << bm  << std::endl; );
+			}
+
+
+			TLorentzVector b1(bj1.px(),bj1.py(),bj1.pz(),bj1.E());
+			TLorentzVector b2(bj2.px(),bj2.py(),bj2.pz(),bj2.E());
+			TLorentzVector jj(j1.px(),j1.py(),j1.pz(),j1.E());
+
+			TLorentzVector q=b1+b2-jj;
+			q.Boost(0,0,beta);
+			double EE=q.E()/2;
+			bj1.reset_momentum(0,0,EE,EE);
+			bj2.reset_momentum(0,0,-EE,EE);
+			NAMED_DEBUG("BOOST",std::cout << "beam Jet after boost: " << bj1 <<"  E: " << bj1.E() << " pz: " << bj1.pz() << std::endl; );
+ 			NAMED_DEBUG("BOOST",std::cout << "beam Jet after boost: " << bj2 <<"  E: " << bj2.E() << " pz: " << bj2.pz() << std::endl; );
+
+}
+
+
+
+
 
 void FSRboost(fastjet::PseudoJet& bj1,fastjet::PseudoJet& bj2,
 				const fastjet::PseudoJet& j1,const fastjet::PseudoJet& j2,

@@ -372,12 +372,12 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 		} else {
 		  	if (parent2==-1){
 		  		if (beam_index==1){
-		  			NAMED_DEBUG("CLUSTERING_DECISION",cout << "==> decided to merge jet "<< candidates[parent1] << " and forward beam (" << minDistance <<")"  << endl;)
+		  			NAMED_DEBUG("CLUSTERING_DECISION",cout << "==> decided to merge jet "<< candidates[parent1] << " and forward beam (" << minDistance <<"=" << sqrt(minDistance)<<"^2)"  << endl;)
 		  		} else {
-			  		NAMED_DEBUG("CLUSTERING_DECISION",cout << "==> decided to merge jet "<< candidates[parent1] << " and " << "backward beam (" << minDistance <<")"  << endl;)
+			  		NAMED_DEBUG("CLUSTERING_DECISION",cout << "==> decided to merge jet "<< candidates[parent1] << " and " << "backward beam (" << minDistance <<"=" << sqrt(minDistance)<<"^2)"  << endl;)
 		  		}
 		  	} else {
-		  		NAMED_DEBUG("CLUSTERING_DECISION",cout << "==> decided to merge jet "<< candidates[parent1] << " and jet " << candidates[parent2] << " (" << minDistance <<")"  << endl;)
+		  		NAMED_DEBUG("CLUSTERING_DECISION",cout << "==> decided to merge jet "<< candidates[parent1] << " and jet " << candidates[parent2] << " (" << minDistance <<"=" << sqrt(minDistance)<<"^2)"  << endl;)
 		  	}
 		}
 
@@ -456,6 +456,16 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 			int jetIndex2=beam_particles[1];
 			PseudoJet& bj2=const_cast<PseudoJet&>(cs.jets()[jetIndex2]);
 			double boostxyVec[3], boostzVec[3];
+			bool doSimpleBoost=true;
+			if (doSimpleBoost) {
+				ISRboostSimple(
+					bj1,bj2,
+					j1,
+					candidates,
+					cs,
+					beam_particles,&boostzVec[0],&boostxyVec[0]
+				);
+			} else {
 			ISRboost(
 				bj1,bj2,
 				j1,
@@ -463,6 +473,7 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 				cs,
 				beam_particles,&boostzVec[0],&boostxyVec[0]
 			);
+			}
 			extras->setISRzboost(boostzVec[0],boostzVec[1],boostzVec[2]);
 			extras->setISRxyboost(boostxyVec[0],boostxyVec[1],boostxyVec[2]);
 /*
