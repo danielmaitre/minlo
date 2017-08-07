@@ -456,8 +456,8 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 			int jetIndex2=beam_particles[1];
 			PseudoJet& bj2=const_cast<PseudoJet&>(cs.jets()[jetIndex2]);
 			double boostxyVec[3], boostzVec[3];
-			bool doSimpleBoost=true;
-			if (doSimpleBoost) {
+
+			if (_doSimpleBoost) {
 				ISRboostSimple(
 					bj1,bj2,
 					j1,
@@ -592,14 +592,25 @@ void MyFlavKtPlugin::run_clustering(ClusterSequence & cs) const {
 
 			PseudoJet& j12=const_cast<PseudoJet&>(cs.jets()[k]);
 			double boostVec[3];
-			FSRboost(
-				bj1,bj2,
-				j1,j2,
-				j12,
-				candidates,
-				cs,
-				beam_particles,&boostVec[0]
-			);
+			if (_doSimpleBoost) {
+				FSRboostSimple(
+						bj1,bj2,
+						j1,j2,
+						j12,
+						candidates,
+						cs,
+						beam_particles,&boostVec[0]
+				);
+			} else {
+				FSRboost(
+						bj1,bj2,
+						j1,j2,
+						j12,
+						candidates,
+						cs,
+						beam_particles,&boostVec[0]
+				);
+			}
 			extras->setFSRboost(boostVec[0],boostVec[1],boostVec[2]);
 
 			doBoost=false;  //only run the boost once!

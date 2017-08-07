@@ -100,10 +100,20 @@ void ISRboostSimple(fastjet::PseudoJet& bj1,fastjet::PseudoJet& bj2,
 	double labS=LabE*LabE-Labz*Labz;
 	double beta=-Labz/LabE;
 	boostxyVec[0]=0;boostxyVec[1]=0;boostxyVec[2]=0;
-
+	boostzVec[0]=0;boostzVec[1]=0;boostzVec[2]=beta;
 	NAMED_DEBUG("BOOST",
 			std::cout << setw(12) << "pt" << setw(12) << "rapidity" << setw(12) << "phi" << "  flav" << std::endl;
 	)
+
+	TLorentzVector b1(bj1.px(),bj1.py(),bj1.pz(),bj1.E());
+	TLorentzVector b2(bj2.px(),bj2.py(),bj2.pz(),bj2.E());
+	TLorentzVector jj(j1.px(),j1.py(),j1.pz(),j1.E());
+
+	TLorentzVector q=b1+b2-jj;
+	q.Boost(0,0,beta);
+	double EE=q.E()/2;
+
+
 			for (int ic=0;ic<candidates.size();ic++){
 				int jetIndex=candidates[ic];
 				const fastjet::PseudoJet& jc=cs.jets()[jetIndex];
@@ -132,13 +142,6 @@ void ISRboostSimple(fastjet::PseudoJet& bj1,fastjet::PseudoJet& bj2,
 			}
 
 
-			TLorentzVector b1(bj1.px(),bj1.py(),bj1.pz(),bj1.E());
-			TLorentzVector b2(bj2.px(),bj2.py(),bj2.pz(),bj2.E());
-			TLorentzVector jj(j1.px(),j1.py(),j1.pz(),j1.E());
-
-			TLorentzVector q=b1+b2-jj;
-			q.Boost(0,0,beta);
-			double EE=q.E()/2;
 			bj1.reset_momentum(0,0,EE,EE);
 			bj2.reset_momentum(0,0,-EE,EE);
 			NAMED_DEBUG("BOOST",std::cout << "beam Jet after boost: " << bj1 <<"  E: " << bj1.E() << " pz: " << bj1.pz() << std::endl; );
@@ -208,6 +211,19 @@ void FSRboost(fastjet::PseudoJet& bj1,fastjet::PseudoJet& bj2,
 	);
 }
 
+void FSRboostSimple(fastjet::PseudoJet& bj1,fastjet::PseudoJet& bj2,
+				const fastjet::PseudoJet& j1,const fastjet::PseudoJet& j2,
+				fastjet::PseudoJet& j12,
+				const vector<int>& candidates,
+				fastjet::ClusterSequence & cs,
+				const vector<int>& beam_particles,double* boostVec
+				){
+
+	boostVec[0]=0;
+	boostVec[1]=0;
+	boostVec[2]=0;
+
+}
 
 
 

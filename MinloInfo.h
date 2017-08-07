@@ -27,6 +27,7 @@ struct MinloInfo {
 	int d_nfgs;
 	bool d_useMinloAlphaReceipeForSubtraction;
 	bool d_useAnalyticalSherpa;
+	bool d_doSimpleIFSRBoost;
 
 	void print(std::ostream& os) {
 		os << "njetsOrig  : " << d_njetsOrig << std::endl;

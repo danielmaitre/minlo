@@ -13,7 +13,7 @@ namespace fastjet {     // defined in fastjet/internal/base.hh
 class MyFlavKtPlugin : public JetDefinition::Plugin {
 public:
   /// based on the FlavKtPlugin
-  MyFlavKtPlugin (double R,bool useModifiedR,int nb,bool useRapidity) :  _R(R), _useModifiedR(useModifiedR), _nBoosts(nb), _useRapidity(useRapidity) {}
+  MyFlavKtPlugin (double R,bool useModifiedR,int nb,bool useRapidity,bool doSimpleBoost) :  _R(R), _useModifiedR(useModifiedR), _nBoosts(nb), _useRapidity(useRapidity) , _doSimpleBoost(doSimpleBoost) {}
 
   /// standard plugin call to run the clustering
   virtual void run_clustering(ClusterSequence & cs) const;
@@ -32,6 +32,7 @@ private:
   double _R;
   bool _useModifiedR;
   bool _useRapidity;
+  bool _doSimpleBoost;
   int _nBoosts;
   static const FlavInfo _no_flav;
   static LimitedWarning _spectators_unhandled;

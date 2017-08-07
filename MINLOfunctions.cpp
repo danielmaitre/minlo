@@ -738,7 +738,7 @@ double MINLOcomputeSudakovFn(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTIC
 	} else {
 		nb=0;
 	}
-	fastjet::JetDefinition jet_def = new fastjet::MyFlavKtPlugin(R,MI.d_useModifiedR,nb,MI.d_useRapidityInClustering);
+	fastjet::JetDefinition jet_def = new fastjet::MyFlavKtPlugin(R,MI.d_useModifiedR,nb,MI.d_useRapidityInClustering,MI.d_doSimpleIFSRBoost);
 	fastjet::ClusterSequence cs(input_particles, jet_def);
 	const THEPLUGIN::Extras * extras = dynamic_cast<const THEPLUGIN::Extras *>(cs.extras());
 	NAMED_DEBUG("EVENT_INCL_VIEW", printEventInclView(cs,0.0);)
@@ -793,12 +793,15 @@ double MINLOcomputeSudakovFn(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTIC
 	if (extras->hasFSRboost()){
 		double boostVec[3];
 		extras->getFSRboost(&boostVec[0]);
-		basicProcess.Boost(boostVec[0],boostVec[1],boostVec[2]);
-		NAMED_DEBUG("CORE_PROCESS_SCALE",
-			std::cout << "core process vector after boost: " << basicProcess.E() <<" " << basicProcess.X() << " " << basicProcess.Y() << " " <<  basicProcess.Z() << std::endl;
-		)
-		for (int iMom=0;iMom<nonPartons.size();iMom++){
-			nonPartons[iMom].Boost(boostVec[0],boostVec[1],boostVec[2]);
+		if (not(boostVec[0]==0.0 and boostVec[1]==0.0 and boostVec[2]==0.0)){
+			basicProcess.Boost(boostVec[0],boostVec[1],boostVec[2]);
+
+			NAMED_DEBUG("CORE_PROCESS_SCALE",
+				std::cout << "core process vector after boost: " << basicProcess.E() <<" " << basicProcess.X() << " " << basicProcess.Y() << " " <<  basicProcess.Z() << std::endl;
+			)
+			for (int iMom=0;iMom<nonPartons.size();iMom++){
+				nonPartons[iMom].Boost(boostVec[0],boostVec[1],boostVec[2]);
+			}
 		}
 	}
 	if (extras->hasISRboost()){
