@@ -176,7 +176,7 @@ void displayClusterHistoryDot(fastjet::ClusterSequence& cs,std::ostream& os){
     		os << parent1 << " -- " << historyIndex << " [" << style1 << "]" << std::endl;
     		os << parent2 << " -- " << historyIndex << " [" << style2 << "]" <<  std::endl;
     	}
-		os << historyIndex << "[ label= \""<< historyIndex<<" \\n " << cs.history()[historyIndex].dij << "\" ]" << std::endl;
+		os << historyIndex << "[ label= \""<< historyIndex<<" \\n " << cs.history()[historyIndex].dij << "=" << sqrt(cs.history()[historyIndex].dij)<< "^2" << "\" ]" << std::endl;
 		njetsCurrent--;
 	}
 	os << "// connecting to the main process: " << std::endl ;
