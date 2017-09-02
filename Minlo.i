@@ -22,7 +22,7 @@ namespace std {
 
 %include <typemaps.i>
 
-%include "RtypesCore.h"
+
 
 %include "ntuplereader/NtupleInfo.h"
 %include "ntuplereader/EventReaderBase.h"
