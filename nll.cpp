@@ -40,6 +40,9 @@ double nll_sudakov_withInfo(const MinloInfo& MI,const  double &q20,const double 
 			double q2ll=q2l;
 			double q2hl=q2h;
 			int fl=flav;
+			if (q2h<=q20){
+				return 1;
+			}
 			return SherpaSudakov(q20, q2h, q2l, flav, currentPDF::s_PDF, MI.d_sherpaMode);
 		}
 	}

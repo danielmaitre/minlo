@@ -310,6 +310,10 @@ double getSudakovFactor(
 		int i = start-1;
 		int njetsCurrent=njetsStart;
 
+		if (MI.d_stopAfterFirstDrop){
+			lastScale2=cs.history()[i].dij;
+		}
+
 		NAMED_DEBUG("CLUSTERING_STEPS (SKIPPED)",
 	    		  cout << " ---- Step " << i << " ----" << endl;
 	      	  	  cout <<"dij: "<< cs.history()[i].dij<< endl;
@@ -347,12 +351,15 @@ double getSudakovFactor(
     	      }
 	}
 
-
+	bool setQ0ToQlocal=false;
 	double q02 = history[start].dij;
 	// this can happen if the second clustering has a smaller dij than the first.
 	// it doesn't happen for born type configurations, only for real configurations
 	if (q02<lastScale2){
 		q02=lastScale2;
+		if (MI.d_stopAfterFirstDrop){
+			setQ0ToQlocal=true;
+		}
 	}
 	q0 = sqrt(q02);
 
@@ -372,14 +379,13 @@ double getSudakovFactor(
 	//this will store the scales and
 	std::vector<sudakovCandidate> sudakovCandidates;
 	double maxScale2=0;
-	bool setQ0ToQlocal=false;
 	while (historyIndex <= maxHist) {
-      NAMED_DEBUG("CLUSTERING_STEPS",
+		NAMED_DEBUG("CLUSTERING_STEPS",
     		cout << " ---- Step " << historyIndex << " ----" << endl;
-  	  	cout <<"dij: "<< cs.history()[historyIndex].dij<< endl;
-      )
+  	  		cout <<"dij: "<< cs.history()[historyIndex].dij<< endl;
+		)
 		double nextScale2=cs.history()[historyIndex].dij;
-    if (nextScale2<lastScale2){
+		if (nextScale2<lastScale2){
 			NAMED_DEBUG("CLUSTERING_STEPS",	cout << " -!!! Step " << historyIndex << " has a lower scale "<< sqrt(nextScale2) << " than before "<< sqrt(lastScale2)<< endl;)
 			if (MI.d_stopAfterFirstDrop){
 				break;
@@ -961,7 +967,7 @@ NtupleInfo<MAX_NBR_PARTICLES> boostedToCMF(const NtupleInfo<MAX_NBR_PARTICLES>& 
 	double LabEx=(x1+x2);
 	double Labzx=(x1-x2);
 	double beta=-Labzx/LabEx;
-	double ECMFx=sqrt(orig.x1*orig.x2);
+	double ECMFx=sqrt(x1*x2);
 	std::vector<TLorentzVector> boostedVectors;
 	evb.x1=ECMFx;
 	evb.x2=ECMFx;
