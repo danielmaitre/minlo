@@ -1,6 +1,6 @@
 #ifndef _H_MINLOINFO_H_
 #define _H_MINLOINFO_H_
-
+#include <iostream>
 #include <iomanip>
 
 struct MinloInfo {
