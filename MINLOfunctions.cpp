@@ -310,6 +310,10 @@ double getSudakovFactor(
 		int i = start-1;
 		int njetsCurrent=njetsStart;
 
+		if (MI.d_stopAfterFirstDrop){
+			lastScale2=cs.history()[i].dij;
+		}
+
 		NAMED_DEBUG("CLUSTERING_STEPS (SKIPPED)",
 	    		  cout << " ---- Step " << i << " ----" << endl;
 	      	  	  cout <<"dij: "<< cs.history()[i].dij<< endl;
@@ -347,12 +351,15 @@ double getSudakovFactor(
     	      }
 	}
 
-
+	bool setQ0ToQlocal=false;
 	double q02 = history[start].dij;
 	// this can happen if the second clustering has a smaller dij than the first.
 	// it doesn't happen for born type configurations, only for real configurations
 	if (q02<lastScale2){
 		q02=lastScale2;
+		if (MI.d_stopAfterFirstDrop){
+			setQ0ToQlocal=true;
+		}
 	}
 	q0 = sqrt(q02);
 
@@ -372,14 +379,13 @@ double getSudakovFactor(
 	//this will store the scales and
 	std::vector<sudakovCandidate> sudakovCandidates;
 	double maxScale2=0;
-	bool setQ0ToQlocal=false;
 	while (historyIndex <= maxHist) {
-      NAMED_DEBUG("CLUSTERING_STEPS",
+		NAMED_DEBUG("CLUSTERING_STEPS",
     		cout << " ---- Step " << historyIndex << " ----" << endl;
-  	  	cout <<"dij: "<< cs.history()[historyIndex].dij<< endl;
-      )
+  	  		cout <<"dij: "<< cs.history()[historyIndex].dij<< endl;
+		)
 		double nextScale2=cs.history()[historyIndex].dij;
-    if (nextScale2<lastScale2){
+		if (nextScale2<lastScale2){
 			NAMED_DEBUG("CLUSTERING_STEPS",	cout << " -!!! Step " << historyIndex << " has a lower scale "<< sqrt(nextScale2) << " than before "<< sqrt(lastScale2)<< endl;)
 			if (MI.d_stopAfterFirstDrop){
 				break;
@@ -738,7 +744,7 @@ double MINLOcomputeSudakovFn(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTIC
 	} else {
 		nb=0;
 	}
-	fastjet::JetDefinition jet_def = new fastjet::MyFlavKtPlugin(R,MI.d_useModifiedR,nb,MI.d_useRapidityInClustering);
+	fastjet::JetDefinition jet_def = new fastjet::MyFlavKtPlugin(R,MI.d_useModifiedR,nb,MI.d_useRapidityInClustering,MI.d_doSimpleIFSRBoost);
 	fastjet::ClusterSequence cs(input_particles, jet_def);
 	const THEPLUGIN::Extras * extras = dynamic_cast<const THEPLUGIN::Extras *>(cs.extras());
 	NAMED_DEBUG("EVENT_INCL_VIEW", printEventInclView(cs,0.0);)
@@ -793,12 +799,15 @@ double MINLOcomputeSudakovFn(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTIC
 	if (extras->hasFSRboost()){
 		double boostVec[3];
 		extras->getFSRboost(&boostVec[0]);
-		basicProcess.Boost(boostVec[0],boostVec[1],boostVec[2]);
-		NAMED_DEBUG("CORE_PROCESS_SCALE",
-			std::cout << "core process vector after boost: " << basicProcess.E() <<" " << basicProcess.X() << " " << basicProcess.Y() << " " <<  basicProcess.Z() << std::endl;
-		)
-		for (int iMom=0;iMom<nonPartons.size();iMom++){
-			nonPartons[iMom].Boost(boostVec[0],boostVec[1],boostVec[2]);
+		if (not(boostVec[0]==0.0 and boostVec[1]==0.0 and boostVec[2]==0.0)){
+			basicProcess.Boost(boostVec[0],boostVec[1],boostVec[2]);
+
+			NAMED_DEBUG("CORE_PROCESS_SCALE",
+				std::cout << "core process vector after boost: " << basicProcess.E() <<" " << basicProcess.X() << " " << basicProcess.Y() << " " <<  basicProcess.Z() << std::endl;
+			)
+			for (int iMom=0;iMom<nonPartons.size();iMom++){
+				nonPartons[iMom].Boost(boostVec[0],boostVec[1],boostVec[2]);
+			}
 		}
 	}
 	if (extras->hasISRboost()){
@@ -958,7 +967,7 @@ NtupleInfo<MAX_NBR_PARTICLES> boostedToCMF(const NtupleInfo<MAX_NBR_PARTICLES>& 
 	double LabEx=(x1+x2);
 	double Labzx=(x1-x2);
 	double beta=-Labzx/LabEx;
-	double ECMFx=sqrt(orig.x1*orig.x2);
+	double ECMFx=sqrt(x1*x2);
 	std::vector<TLorentzVector> boostedVectors;
 	evb.x1=ECMFx;
 	evb.x2=ECMFx;

@@ -39,6 +39,7 @@ void MinloInfo::readFromStream(std::istream& is){
 	("minlo.nfgs", po::value<int>()->default_value(6), "nf in gluon splitting for the sudakov")
 	("minlo.useMinloAlphaReceipeForSubtraction", po::value<bool>()->default_value(true), "use the arithmetic average of the alphas as the alphas multiplying the subtraction (only affects sherpaMode=2,3)")
 	("minlo.useAnalyticalSherpa", po::value<bool>()->default_value(false), "use the analytically integrated sudakovs)")
+	("minlo.doSimpleIFSRBoost", po::value<bool>()->default_value(false), "use a simple boost after the first clustering in the real MEs instead of inverting the FKS maps")
 	;
 
 
@@ -78,6 +79,8 @@ void MinloInfo::readFromStream(std::istream& is){
 	d_nfgs=vm["minlo.nfgs"].as<int>();
 	d_useMinloAlphaReceipeForSubtraction=vm["useMinloAlphaReceipeForSubtraction"].as<bool>();
 	d_useAnalyticalSherpa=vm["useAnalyticalSherpa"].as<bool>();
+	d_doSimpleIFSRBoost=vm["doSimpleIFSRBoost"].as<bool>();
+
 	if ( vm["minlo.scaleMode"].as<std::string>() == "geometric"){
 		d_scaleMode=MinloInfo::geometric;
 	} else if ( vm["minlo.scaleMode"].as<std::string>() == "inverseAlpha"){
