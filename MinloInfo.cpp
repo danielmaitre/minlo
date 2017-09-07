@@ -40,6 +40,8 @@ void MinloInfo::readFromStream(std::istream& is){
 	("minlo.useMinloAlphaReceipeForSubtraction", po::value<bool>()->default_value(true), "use the arithmetic average of the alphas as the alphas multiplying the subtraction (only affects sherpaMode=2,3)")
 	("minlo.useAnalyticalSherpa", po::value<bool>()->default_value(false), "use the analytically integrated sudakovs)")
 	("minlo.doSimpleIFSRBoost", po::value<bool>()->default_value(false), "use a simple boost after the first clustering in the real MEs instead of inverting the FKS maps")
+	("minlo.KR",po::value<double>()->default_value(1.0),"factor multiplying the renormalisation scale")
+	("minlo.KF",po::value<double>()->default_value(1.0),"factor multiplying the factorisation scale")
 	;
 
 
@@ -80,6 +82,8 @@ void MinloInfo::readFromStream(std::istream& is){
 	d_useMinloAlphaReceipeForSubtraction=vm["useMinloAlphaReceipeForSubtraction"].as<bool>();
 	d_useAnalyticalSherpa=vm["useAnalyticalSherpa"].as<bool>();
 	d_doSimpleIFSRBoost=vm["doSimpleIFSRBoost"].as<bool>();
+	d_KF=vm["minlo.KF"].as<double>();
+	d_KR=vm["minlo.KR"].as<double>();
 
 	if ( vm["minlo.scaleMode"].as<std::string>() == "geometric"){
 		d_scaleMode=MinloInfo::geometric;

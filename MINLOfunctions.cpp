@@ -181,7 +181,15 @@ void computeSudakov(const MinloInfo& MI,double highScale,double lowScale,double 
 			cout << "This gives a sudakov factor of " << sudakov << endl; cout << "born LL sudakov subtraction " << bornSub << std::endl;)
 }
 
-void calculateScaleAndAlphasFactor(const MinloInfo& MI,double Qlocal,double oldAlpha,double &alphasFactor,double& alphaForNLO,double &scaleForNLO,double &alphaAtScaleForNLO,const std::vector<double>& scales){
+void calculateScaleAndAlphasFactor(
+		const MinloInfo& MI,
+		double Qlocal,
+		double oldAlpha,
+		double &alphasFactor,
+		double& alphaForNLO,
+		double &scaleForNLO,
+		double &alphaAtScaleForNLO,
+		const std::vector<double>& scales){
 	alphasFactor=1;
 	double alphaFactorNum=1;
 	double alphaFactorDen=1;
@@ -189,7 +197,7 @@ void calculateScaleAndAlphasFactor(const MinloInfo& MI,double Qlocal,double oldA
 	double newAlpha;
 	double scaleProduct=1;
 	for (int i =0; i<scales.size();i++){
-		newAlpha=getAlphasQ(scales[i],MI);
+		newAlpha=getAlphasQ(scales[i]*MI.d_KR,MI);
 		NAMED_DEBUG("ALPHAS_SCALES",cout << "alphas from clustering scale "<< scales[i] << ": "<< newAlpha << endl;)
 		alphasFactor/=oldAlpha;
 		alphaFactorDen*=oldAlpha;
@@ -200,7 +208,7 @@ void calculateScaleAndAlphasFactor(const MinloInfo& MI,double Qlocal,double oldA
 	}
 	// this is to set the alphas in the primary process to the ME scale
 	for (int i =1;i<=MI.d_njetsClus+MI.d_njetsOrig-scales.size();i++){
-		newAlpha=getAlphasQ(Qlocal,MI);
+		newAlpha=getAlphasQ(Qlocal*MI.d_KR,MI);
 		NAMED_DEBUG("ALPHAS_SCALES",cout << "alphas from primary process scale "<< Qlocal << ": "<< newAlpha << endl;)
 		alphasFactor/=oldAlpha;
 		alphaFactorDen*=oldAlpha;
@@ -871,7 +879,7 @@ double MINLOcomputeSudakovFn(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTIC
 		for (int si=0; si<scales.size();si++){ cout << " " << scales[si]; }; cout << endl
 	)
 
-
+	double res;
 	if (MI.d_type==MinloInfo::born){
 		double b0=(33-2*5)/12.0/3.14159265358979323846264;
 		//double fullSubtraction= alphaForNLO*(subtraction+d_njetsOrig*b0*2*log(scaleForNLO/fixedScaleForNLO));
@@ -914,7 +922,7 @@ double MINLOcomputeSudakovFn(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTIC
 		static QofAlphasInterpolated* QoA=new QofAlphasInterpolated();
 		minloImpl::g_MinloScale=(*QoA)(effectiveAlphas);
 		minloImpl::g_MinloScaleValid=true;
-		return factor;
+		res=factor;
 
 		//return sfactor*alphaFactor*(1-alphaForNLO*subtraction);
 	} else {
@@ -926,15 +934,17 @@ double MINLOcomputeSudakovFn(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTIC
 		NAMED_DEBUG("KEITH",cout << "To compare: nlofac: " << nlofac << endl;)
 		NAMED_DEBUG("KEITH",cout << "To compare: st_mufac2: " << q0*q0 << endl;)
 		NAMED_DEBUG("KEITH",cout << "To compare: weight: " << sudakovFactor*alphasFactor << endl;)
-		return sudakovFactor*alphasFactor;
+		res=sudakovFactor*alphasFactor;
 	}
-
+	q0*=MI.d_KF;
+	return res;
 }
 
 
 double MINLOcomputeSudakov(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTICLES>& Ev,double &q0,double &scaleForNLO,int &status,bool useNewNtupleFormat,bool useDouble) {
 	double sudakovFactor,alphasFactor;
-	return MINLOcomputeSudakovFn(MI, Ev, q0, scaleForNLO, status, useNewNtupleFormat, useDouble, sudakovFactor, alphasFactor);
+	double res=MINLOcomputeSudakovFn(MI, Ev, q0, scaleForNLO, status, useNewNtupleFormat, useDouble, sudakovFactor, alphasFactor);
+	return res;
 }
 
 
