@@ -937,6 +937,7 @@ double MINLOcomputeSudakovFn(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTIC
 		res=sudakovFactor*alphasFactor;
 	}
 	q0*=MI.d_KF;
+	scaleForNLO*=MI.d_KR;
 	return res;
 }
 
