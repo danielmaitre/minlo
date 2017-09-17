@@ -5,6 +5,7 @@
  *      Author: daniel
  */
 
+
 #include "cachedFunction.h"
 
 template <class argT> bool cache<argT>::get(const argT& args,double& value){
@@ -26,6 +27,28 @@ template <class argT> void cache<argT>::set(const argT& args,double value){
 	}
 	d_store[args]=value;
 }
+
+bool operator<(const args_t& a1,const args_t& a2){
+	COMP(lambda);
+	COMP(mode);
+	COMP(q20);
+	COMP(q2h);
+	COMP(q2l);
+	COMP(flav);
+	return false;
+}
+
+bool operator<(const arge_t& a1,const arge_t& a2){
+	COMP(lambda);
+	COMP(mode);
+	COMP(q20);
+	COMP(q2h);
+	COMP(q2l);
+	COMP(q2ren);
+	COMP(flav);
+	return false;
+}
+
 
 template class cache<args_t>;
 template class cache<arge_t>;
