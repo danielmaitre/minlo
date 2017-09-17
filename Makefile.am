@@ -23,7 +23,8 @@ libMINLOlib_la_SOURCES = \
 	MinloInfo.h MinloInfo.cpp \
 	nll.h nll.cpp \
 	coreScales.cpp coreScales.h\
-	ExpIntegral.cpp ExpIntegral.h
+	ExpIntegral.cpp ExpIntegral.h\
+	cachedFunction.cpp cachedFunction.h
 
 AM_LDFLAGS =  $(FASTJET_LDFLAGS) $(LHAPDF_LDFLAGS) 
 AM_LDFLAGS += $(ROOT_LIBS)

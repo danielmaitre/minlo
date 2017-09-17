@@ -12,29 +12,62 @@
 #include <cmath>
 #include "pdf.h"
 #include "ExpIntegral.h"
+#include "cachedFunction.h"
 
-double nll_sudakov_withInfo(const MinloInfo& MI,const  double &q20,const double &q2h,const double &q2l,const int &flav){
+double nll_sudakov_withInfo_fn(const MinloInfo& MI,const  double &q20,const double &q2h,const double &q2l,const int &flav){
 	NAMED_DEBUG("SUDAKOV_ARGUMENTS",std::cout <<"sudakov args q0: " << sqrt(q20)  <<" qh: " << sqrt(q2h)  <<" ql: " << sqrt(q2l)  <<" flav: " << flav <<  std::endl;)
 	if (!MI.d_useSherpa){
 			return NLL_SUDAKOV(q20,q2h,q2l,flav);
 	} else {
 		if (MI.d_useAnalyticalSherpa){
+			if (q2h<=q20){
+				return 1;
+			}
+
 			double lambda2=MI.d_lambda*MI.d_lambda;
+			double res;
 			if (flav==0){
 				if (MI.d_sherpaMode==2){
-					return analyticSudakovGluonMode2(q20, q2h, q2l, lambda2);
+					res=analyticSudakovGluonMode2(q20, q2h, q2l, lambda2);
 				}
 				if (MI.d_sherpaMode==3){
-					return analyticSudakovGluonMode3(q20, q2h, q2l, lambda2);
+					res=analyticSudakovGluonMode3(q20, q2h, q2l, lambda2);
 				}
 			} else {
 				if (MI.d_sherpaMode==2){
-					return analyticSudakovQuarkMode2(q20, q2h, q2l, lambda2);
+					res=analyticSudakovQuarkMode2(q20, q2h, q2l, lambda2);
 				}
 				if (MI.d_sherpaMode==3){
-					return analyticSudakovQuarkMode3(q20, q2h, q2l, lambda2);
+					res=analyticSudakovQuarkMode3(q20, q2h, q2l, lambda2);
 				}
 			}
+			NAMED_DEBUG("NLL_ANALYTIC",
+			double resSherpa=SherpaSudakov(q20, q2h, q2l, flav, currentPDF::s_PDF, MI.d_sherpaMode);
+			if (abs((res-resSherpa)/(res+resSherpa))>1e-3){
+				std::cout << "Discrepancy for " <<
+						"rel diff: " << abs((res-resSherpa)/(res+resSherpa)) << " " <<
+						"res: " << res << " " <<
+						"resSherpa: " << resSherpa << " " <<
+					 	"q20: " << q20 << " " <<
+					 	"q2h: " << q2h << " " <<
+					 	"q2l: " << q2l << " " <<
+						"flav: " << flav << " " <<
+						std::endl;
+			}
+			NAMED_DEBUG("PRINT_ALL",std::cout << "analytic:" << res << " numeric: " << resSherpa << std::endl;
+			std::cout << "Discrepancy for " <<
+					"rel diff: " << abs((res-resSherpa)/(res+resSherpa)) << " " <<
+					"res: " << res << " " <<
+					"resSherpa: " << resSherpa << " " <<
+				 	"q20: " << q20 << " " <<
+				 	"q2h: " << q2h << " " <<
+				 	"q2l: " << q2l << " " <<
+					"flav: " << flav << " " <<
+					std::endl;
+)
+
+			)
+			return res;
 		} else {
 			double q20l=q20;
 			double q2ll=q2l;
@@ -49,7 +82,7 @@ double nll_sudakov_withInfo(const MinloInfo& MI,const  double &q20,const double 
 };
 
 double nll_exponent_withInfo(const MinloInfo& MI,const  double &q20,const double &q2h,const double &q2l,const int &flav){
-	NAMED_DEBUG("SUDAKOV_EXPONENT",std::cout <<"sudakov epxponent args q0: " << sqrt(q20)  <<" qh: " << sqrt(q2h)  <<" ql: " << sqrt(q2l)  <<" flav: " << flav <<  std::endl;)
+	NAMED_DEBUG("SUDAKOV_EXPONENT",std::cout <<"sudakov exponent args q0: " << sqrt(q20)  <<" qh: " << sqrt(q2h)  <<" ql: " << sqrt(q2l)  <<" flav: " << flav <<  std::endl;)
 	if (!MI.d_useSherpa){
 		return SUDAKOV_EXPONENT(q20,q2h,q2l,flav);
 	} else{
@@ -65,7 +98,28 @@ double nll_exponent_withInfo(const MinloInfo& MI,const  double &q20,const double
 	}
 };
 
-double fo_exponent_withInfo(const MinloInfo& MI,const  double &q20,const double &q2h,const double &q2l,const double &q2ren,const int &flav){
+double nll_sudakov_withInfo(const MinloInfo& MI,const  double &q20,const double &q2h,const double &q2l,const int &flav){
+	static cache<args_t> valueCache(100);
+	static double n_used=0;
+	static double n_notused=0;
+	args_t a(MI.d_lambda,MI.d_sherpaMode,q20,q2h,q2l,flav);
+	double cachedRes;
+	bool cached=valueCache.get(a,cachedRes);
+	if (cached){
+		n_used+=1;
+		NAMED_DEBUG("CACHE_STATS", std::cout << "reusing! ratio:" << n_used/(n_used+n_notused) << std::endl;  )
+		return cachedRes;
+	}
+	n_notused+=1;
+	NAMED_DEBUG("CACHE_STATS", std::cout << "not reusing!" << n_used/(n_used+n_notused) << std::endl;  )
+	cachedRes=nll_sudakov_withInfo_fn(MI,q20,q2h,q2l,flav);
+	valueCache.set(a,cachedRes);
+	return cachedRes;
+}
+
+
+
+double fo_exponent_withInfo_fn(const MinloInfo& MI,const  double &q20,const double &q2h,const double &q2l,const double &q2ren,const int &flav){
 	NAMED_DEBUG("SUDAKOV_FO_EXPONENT",std::cout <<"sudakov fo exponent args q0: " << sqrt(q20)  <<" qh: " << sqrt(q2h)  <<" ql: " << sqrt(q2l)  <<" flav: " << flav << "q2ren: " << q2ren << std::endl;)
 	if (!MI.d_useSherpa){
 		return EXPSUDAKOV(q20,q2h,q2l,flav);
@@ -104,3 +158,20 @@ double fo_exponent_withInfo(const MinloInfo& MI,const  double &q20,const double 
 		}
 	}
 };
+
+double fo_exponent_withInfo(const MinloInfo& MI,const  double &q20,const double &q2h,const double &q2l,const double &q2ren,const int &flav){
+	static cache<arge_t> valueCache(100);
+
+	arge_t a(MI.d_lambda,MI.d_sherpaMode,q20,q2h,q2l,q2ren,flav);
+	double cachedRes;
+	bool cached=valueCache.get(a,cachedRes);
+	if (cached){
+		NAMED_DEBUG("CACHE_STATS", std::cout << "reusing!" << std::endl;  )
+		return cachedRes;
+	}
+	NAMED_DEBUG("CACHE_STATS", std::cout << "not reusing!" << std::endl;  )
+	cachedRes=fo_exponent_withInfo_fn(MI,q20,q2h,q2l,q2ren,flav);
+	valueCache.set(a,cachedRes);
+	return cachedRes;
+}
+
