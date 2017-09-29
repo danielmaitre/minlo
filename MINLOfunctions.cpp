@@ -752,7 +752,7 @@ double MINLOcomputeSudakovFn(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTIC
 	} else {
 		nb=0;
 	}
-	fastjet::JetDefinition jet_def = new fastjet::MyFlavKtPlugin(R,MI.d_useModifiedR,nb,MI.d_useRapidityInClustering,MI.d_doSimpleIFSRBoost);
+	fastjet::MyFlavKtPlugin* jet_def = new fastjet::MyFlavKtPlugin(R,MI.d_useModifiedR,nb,MI.d_useRapidityInClustering,MI.d_doSimpleIFSRBoost);
 	fastjet::ClusterSequence cs(input_particles, jet_def);
 	const THEPLUGIN::Extras * extras = dynamic_cast<const THEPLUGIN::Extras *>(cs.extras());
 	NAMED_DEBUG("EVENT_INCL_VIEW", printEventInclView(cs,0.0);)
@@ -938,6 +938,7 @@ double MINLOcomputeSudakovFn(const MinloInfo& MI,const NtupleInfo<MAX_NBR_PARTIC
 	}
 	q0*=MI.d_KF;
 	scaleForNLO*=MI.d_KR;
+	delete jet_def;
 	return res;
 }
 
